@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thread — Every word, perfectly placed.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --peach:#F4845F;--peach-l:#FFDAB9;--peach-ll:#FFF5EF;--peach-d:#C4562B;
+  --lemon:#F5C842;--lemon-l:#FFF3B0;--lemon-ll:#FFFBEC;
+  --blush:#F472B6;--blush-l:#FFD6E0;--blush-ll:#FFF0F5;
+  --lav:#A855F7;--lav-l:#E8D5FF;--lav-ll:#F5EDFF;
+  --mint:#10B981;--mint-l:#D1FAE5;
+  --sky:#3B82F6;--sky-l:#DBEAFE;
+  --bg:#FFFBF7;--bg2:#FFF3E0;--bg3:#FFE4CC;
+  --border:#F0D9C8;--border2:#E8C8B0;
+  --text:#1A1A2E;--text2:#5C4B3A;--text3:#9C8575;
+  --card:#FFFFFF;
+  --shadow:0 4px 24px rgba(244,132,95,.10);
+  --shadow-lg:0 12px 48px rgba(244,132,95,.18);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --nav-h:68px;
+}
+[data-theme="dark"]{
+  --bg:#0A0A0A;--bg2:#141414;--bg3:#1E1E1E;
+  --border:#2D2D2D;--border2:#3D3D3D;
+  --text:#F9FAFB;--text2:#D1D5DB;--text3:#6B7280;
+  --card:#141414;
+  --peach:#F97316;--peach-l:#431407;--peach-ll:#1a0a00;
+  --lemon:#F59E0B;--lemon-l:#451a03;--lemon-ll:#1a0a00;
+  --blush:#EF4444;--blush-l:#450a0a;--blush-ll:#1a0000;
+  --lav:#A855F7;--lav-l:#2e1065;--lav-ll:#0a0018;
+  --mint:#22C55E;--mint-l:#052e16;
+  --sky:#3B82F6;--sky-l:#1e3a8a;
+  --shadow:0 4px 24px rgba(0,0,0,.5);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.7);
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s var(--ease),color .3s var(--ease);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;opacity:.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px;pointer-events:none;z-index:9999}
+
+/* MESH */
+.mesh-bg{position:absolute;inset:0;overflow:hidden;z-index:0}
+.mesh-bg::before{content:'';position:absolute;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,var(--peach-l) 0%,transparent 70%);top:-200px;left:-200px;animation:float1 8s ease-in-out infinite}
+.mesh-bg::after{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--lav-l) 0%,transparent 70%);top:100px;right:-100px;animation:float2 10s ease-in-out infinite}
+.mesh-blob{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--blush-l) 0%,transparent 70%);bottom:-100px;left:30%;animation:float3 12s ease-in-out infinite}
+.mesh-blob2{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,var(--lemon-l) 0%,transparent 70%);bottom:50px;right:10%;animation:float4 9s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,30px) scale(1.05)}}
+@keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,40px) scale(1.08)}}
+@keyframes float3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-30px) scale(1.03)}}
+@keyframes float4{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,20px)}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:1000;transition:all .3s var(--ease)}
+nav.scrolled{background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:32px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--text)}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--peach),var(--blush));display:flex;align-items:center;justify-content:center;transition:transform .3s var(--spring)}
+.logo-mark i{color:#fff;font-size:18px}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08)}
+.logo-name span{color:var(--peach)}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{text-decoration:none;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s var(--ease)}
+.nav-links a:hover{color:var(--text);background:var(--peach-ll)}
+.nav-right{display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s var(--ease);text-decoration:none;white-space:nowrap}
+.btn i{font-size:16px}
+.btn:active{transform:scale(.97)}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.btn-primary{background:var(--peach);color:#fff;box-shadow:0 4px 12px color-mix(in srgb,var(--peach) 40%,transparent)}
+.btn-primary:hover{background:var(--peach-d);transform:translateY(-1px);box-shadow:0 8px 20px color-mix(in srgb,var(--peach) 40%,transparent)}
+.btn-lg{padding:14px 32px;font-size:16px;border-radius:12px}
+.btn-secondary{background:var(--lav-l);color:var(--lav);border:1.5px solid var(--lav)}
+.btn-secondary:hover{background:var(--lav);color:#fff}
+.theme-toggle{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s var(--spring);color:var(--text2)}
+.theme-toggle:hover{transform:rotate(-15deg) scale(1.08);background:var(--bg3);color:var(--text)}
+.theme-toggle i{font-size:18px}
+
+section{position:relative}
+.container{max-width:1280px;margin:0 auto;padding:0 32px}
+.section-pad{padding:100px 0}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;padding-top:var(--nav-h)}
+.hero-content{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:80px 32px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;background:var(--blush-ll);border:1px solid var(--blush-l);color:var(--blush);font-size:13px;font-weight:600;margin-bottom:24px;animation:fadeUp .6s .1s both}
+.hero-badge i{font-size:13px}
+h1.hero-title{font-family:'Fraunces',serif;font-size:clamp(42px,5.5vw,68px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-bottom:24px;animation:fadeUp .6s .2s both}
+.hero-title .line1{display:block;color:var(--text)}
+.hero-title .line2{display:block;color:var(--peach)}
+.hero-title .line3{display:block;color:var(--lav)}
+.hero-sub{font-size:18px;color:var(--text2);line-height:1.7;max-width:480px;margin-bottom:40px;animation:fadeUp .6s .35s both}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap;animation:fadeUp .6s .45s both}
+.hero-stats{display:flex;gap:32px;margin-top:40px;animation:fadeUp .6s .55s both}
+.stat{display:flex;flex-direction:column}
+.stat-num{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--peach)}
+.stat-label{font-size:13px;color:var(--text3)}
+
+.hero-visual{position:relative;animation:fadeUp .8s .3s both}
+.app-window{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;transform:perspective(1200px) rotateY(-8deg) rotateX(4deg);transition:transform .6s var(--ease)}
+.hero-visual:hover .app-window{transform:perspective(1200px) rotateY(0deg) rotateX(0deg)}
+.window-bar{height:40px;background:var(--bg2);display:flex;align-items:center;padding:0 16px;gap:8px;border-bottom:1px solid var(--border)}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot.r{background:#FF5F57}.dot.y{background:#FFBD2E}.dot.g{background:#28CA41}
+.window-body{display:grid;grid-template-columns:180px 1fr;height:360px}
+.win-sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:14px 10px}
+.win-nav-item{height:30px;border-radius:7px;margin-bottom:3px;display:flex;align-items:center;padding:0 10px;gap:7px;font-size:11px;color:var(--text2)}
+.win-nav-item.active{background:color-mix(in srgb,var(--peach) 15%,transparent);color:var(--peach);font-weight:600}
+.win-nav-dot{width:5px;height:5px;border-radius:50%;background:var(--peach)}
+.win-main{padding:20px;overflow:hidden}
+.win-title{font-family:'Fraunces',serif;font-size:17px;color:var(--text);margin-bottom:6px;font-weight:600}
+.win-meta{font-size:10px;color:var(--text3);margin-bottom:14px;display:flex;gap:10px;align-items:center}
+.win-badge{background:var(--lemon-l);color:#92400e;font-size:9px;font-weight:600;padding:2px 7px;border-radius:100px;text-transform:uppercase}
+.win-text{display:flex;flex-direction:column;gap:7px}
+.win-line{height:7px;border-radius:3px;background:var(--bg3)}
+.win-line.short{width:60%}.win-line.shorter{width:40%}
+.win-ai-box{margin-top:14px;background:var(--lav-ll);border:1px solid var(--lav-l);border-radius:9px;padding:9px 12px}
+.win-ai-label{font-size:9px;font-weight:600;color:var(--lav);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.win-ai-label i{font-size:11px}
+.win-ai-text{font-size:10px;color:var(--text2);line-height:1.5}
+.typing-cursor{display:inline-block;width:2px;height:10px;background:var(--lav);animation:blink 1s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* LOGOS */
+#logos{padding:40px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);overflow:hidden}
+.logos-label{text-align:center;font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:20px}
+.logos-track{display:flex;gap:60px;animation:logoscroll 20s linear infinite;width:max-content}
+.logos-track:hover{animation-play-state:paused}
+.logo-item{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--text3);white-space:nowrap;opacity:.5;transition:opacity .2s}
+.logo-item:hover{opacity:1}
+@keyframes logoscroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* FEATURES */
+.section-label{display:inline-block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--peach);background:var(--peach-ll);padding:5px 14px;border-radius:100px;margin-bottom:14px}
+.section-h2{font-family:'Fraunces',serif;font-size:clamp(32px,4vw,52px);font-weight:700;line-height:1.15;margin-bottom:14px}
+.section-lead{font-size:17px;color:var(--text2);line-height:1.7;max-width:560px}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;transition:all .3s var(--ease);position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-tint,var(--peach-ll)),transparent);opacity:0;transition:opacity .3s}
+.feature-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--border2)}
+.feature-card:hover::before{opacity:1}
+.feature-icon{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px;transition:transform .3s var(--spring)}
+.feature-icon i{font-size:24px}
+.feature-card:hover .feature-icon{transform:scale(1.12) rotate(-5deg)}
+.feature-card h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:9px}
+.feature-card p{font-size:14px;color:var(--text2);line-height:1.65}
+
+/* MODES */
+#modes{background:var(--bg2)}
+.modes-tabs{display:flex;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:5px;width:fit-content;margin:36px auto 0}
+.mode-tab{padding:10px 26px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all .25s var(--ease);display:flex;align-items:center;gap:7px;font-family:'DM Sans',sans-serif}
+.mode-tab i{font-size:16px}
+.mode-tab.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.modes-content{position:relative;min-height:400px;margin-top:32px}
+.mode-panel{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateX(20px)}
+.mode-panel.active{position:relative;opacity:1;pointer-events:all;transform:translateX(0)}
+.mode-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.mode-features{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.mode-feat{display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:11px;transition:background .2s}
+.mode-feat:hover{background:var(--bg3)}
+.mode-feat-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.mode-feat-icon i{font-size:18px}
+.mode-feat-text h4{font-size:14px;font-weight:600;margin-bottom:3px}
+.mode-feat-text p{font-size:13px;color:var(--text2);line-height:1.55}
+.mode-mockup{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.mode-doc-header{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:6px}
+.mode-doc-meta{font-size:11px;color:var(--text3);margin-bottom:16px;display:flex;gap:8px;align-items:center}
+.mode-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;text-transform:uppercase}
+.mode-lines{display:flex;flex-direction:column;gap:6px}
+.mode-line{height:6px;border-radius:3px;background:var(--bg3)}
+.mode-line.s{width:55%}.mode-line.xs{width:35%}
+
+/* AI SECTION */
+.ai-demo{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:760px;margin:60px auto 0;box-shadow:var(--shadow-lg)}
+.ai-demo-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.ai-avatar-box{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--lav),var(--blush));display:flex;align-items:center;justify-content:center}
+.ai-avatar-box i{color:#fff;font-size:20px}
+.ai-demo-title{font-weight:600;font-size:16px}
+.ai-demo-sub{font-size:13px;color:var(--text3)}
+.ai-command{background:var(--lav-ll);border:1px solid var(--lav-l);border-radius:11px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--lav);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.ai-command i{font-size:16px}
+.ai-response{font-size:15px;line-height:1.75;color:var(--text2);min-height:80px}
+.ai-commands-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.ai-cmd-chip{padding:6px 13px;border-radius:100px;background:var(--peach-ll);border:1px solid var(--peach-l);color:var(--peach);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s var(--ease);display:flex;align-items:center;gap:5px}
+.ai-cmd-chip i{font-size:13px}
+.ai-cmd-chip:hover,.ai-cmd-chip.active{background:var(--peach);color:#fff;transform:translateY(-2px)}
+
+/* WORKFLOW */
+#workflow{background:var(--bg2)}
+.workflow-pipeline{display:flex;gap:0;margin-top:60px;overflow-x:auto}
+.workflow-stage{flex:1;min-width:130px;padding:20px 14px;text-align:center;position:relative}
+.workflow-stage::after{content:'';position:absolute;right:-8px;top:50%;transform:translateY(-50%) translateX(0);width:16px;height:16px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239C8575'%3E%3Cpath d='M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z'/%3E%3C/svg%3E") center/contain no-repeat}
+.workflow-stage:last-child::after{display:none}
+.stage-count{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--peach);margin-bottom:3px}
+.stage-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.stage-badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600}
+
+/* TESTIMONIALS */
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px}
+.testimonial-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transition:all .3s var(--ease)}
+.testimonial-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.t-stars{display:flex;gap:2px;margin-bottom:14px}
+.t-stars i{color:var(--lemon);font-size:15px}
+.t-quote{font-family:'Fraunces',serif;font-size:17px;font-style:italic;line-height:1.65;margin-bottom:20px}
+.t-author{display:flex;align-items:center;gap:10px}
+.t-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.t-name{font-size:14px;font-weight:600}
+.t-role{font-size:12px;color:var(--text3)}
+
+/* PRICING */
+#pricing{background:var(--bg2)}
+.pricing-toggle{display:flex;align-items:center;gap:12px;justify-content:center;margin:28px 0}
+.toggle-track{width:50px;height:26px;background:var(--bg3);border:1px solid var(--border);border-radius:100px;cursor:pointer;position:relative;transition:background .2s}
+.toggle-track.on{background:var(--peach)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .25s var(--spring)}
+.toggle-track.on .toggle-thumb{transform:translateX(22px)}
+.toggle-label{font-size:14px;font-weight:500;color:var(--text2)}
+.savings-badge{background:var(--mint-l);color:var(--mint);font-size:12px;font-weight:600;padding:3px 9px;border-radius:100px;opacity:0;transition:opacity .3s}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.pricing-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:32px;transition:all .3s var(--ease);position:relative;overflow:hidden}
+.pricing-card.featured{border-color:var(--peach);box-shadow:0 0 0 3px color-mix(in srgb,var(--peach) 20%,transparent)}
+.pricing-card.featured::before{content:'Most Popular';position:absolute;top:0;right:0;background:var(--peach);color:#fff;font-size:11px;font-weight:700;padding:6px 16px;border-radius:0 22px 0 11px;text-transform:uppercase;letter-spacing:.05em}
+.pricing-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.plan-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:7px}
+.plan-price{font-family:'Fraunces',serif;font-size:48px;font-weight:700;line-height:1;margin-bottom:3px}
+.plan-price sup{font-size:22px;vertical-align:top;margin-top:7px;display:inline-block}
+.plan-price .period{font-size:15px;font-weight:400;color:var(--text3);font-family:'DM Sans',sans-serif}
+.plan-desc{font-size:13px;color:var(--text2);margin:10px 0 22px}
+.plan-features{display:flex;flex-direction:column;gap:9px;margin-bottom:28px}
+.plan-feat{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2)}
+.plan-feat-icon{width:18px;height:18px;border-radius:50%;background:var(--mint-l);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.plan-feat-icon i{font-size:10px;color:var(--mint)}
+
+/* FAQ */
+.faq-list{display:flex;flex-direction:column;gap:10px;margin-top:44px;max-width:700px;margin-left:auto;margin-right:auto}
+.faq-item{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.faq-item.open{border-color:var(--peach)}
+.faq-q{padding:20px 24px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;user-select:none}
+.faq-icon{width:28px;height:28px;border-radius:7px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s var(--spring);font-size:18px;color:var(--text3)}
+.faq-item.open .faq-icon{background:var(--peach-ll);color:var(--peach);transform:rotate(45deg)}
+.faq-a{height:0;overflow:hidden;transition:height .3s var(--ease)}
+.faq-a-inner{padding:0 24px 20px;font-size:15px;color:var(--text2);line-height:1.7}
+
+/* CTA */
+.cta-title{font-family:'Fraunces',serif;font-size:clamp(36px,4.5vw,58px);font-weight:700;line-height:1.12;margin-bottom:16px}
+.cta-sub{font-size:17px;color:var(--text2);max-width:480px;margin:0 auto 36px;line-height:1.65}
+.signup-form{display:flex;gap:10px;max-width:460px;margin:0 auto}
+.signup-input{flex:1;height:52px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:0 18px;outline:none;transition:all .2s var(--ease)}
+.signup-input:focus{border-color:var(--peach);box-shadow:0 0 0 3px color-mix(in srgb,var(--peach) 15%,transparent)}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:60px 0 32px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand .logo{margin-bottom:12px;font-size:20px}
+.footer-tagline{font-size:13px;color:var(--text3);line-height:1.65;margin-bottom:12px}
+.footer-col h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin-bottom:14px}
+.footer-col a{display:block;font-size:14px;color:var(--text3);text-decoration:none;margin-bottom:9px;transition:color .2s}
+.footer-col a:hover{color:var(--peach)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:28px;border-top:1px solid var(--border);font-size:13px;color:var(--text3)}
+.footer-socials{display:flex;gap:8px}
+.social-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--text3);text-decoration:none;transition:all .2s var(--ease);font-size:16px}
+.social-btn i{font-size:16px}
+.social-btn:hover{background:var(--peach-ll);border-color:var(--peach-l);color:var(--peach);transform:translateY(-2px)}
+
+/* MOBILE NAV */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--card)}
+.hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:1px;transition:all .3s}
+.mobile-nav{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;z-index:999;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.mobile-nav.open{display:flex}
+.mobile-nav a{padding:12px 16px;border-radius:8px;font-size:15px;font-weight:500;color:var(--text2);text-decoration:none;transition:background .2s}
+.mobile-nav a:hover{background:var(--bg3);color:var(--text)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.visible{opacity:1;transform:none}
+
+/* RESPONSIVE */
+@media(max-width:1024px){.hero-content{grid-template-columns:1fr}.hero-visual{display:none}.features-grid{grid-template-columns:1fr 1fr}.testimonials-grid{grid-template-columns:1fr 1fr}.pricing-grid{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.nav-links{display:none}.hamburger{display:flex}.features-grid{grid-template-columns:1fr}.testimonials-grid{grid-template-columns:1fr}.pricing-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr}.mode-layout{grid-template-columns:1fr}.mode-mockup{display:none}}
+@media(max-width:480px){.footer-grid{grid-template-columns:1fr}.signup-form{flex-direction:column}.hero-stats{flex-wrap:wrap;gap:20px}}
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark"><i class="ri-thread-line"></i></div>
+      <div class="logo-name"><span>Thread</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#modes">Modes</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#workflow">Workflow</a>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="ri-sun-line" id="themeIcon"></i></button>
+      <a href="app.html" class="btn btn-ghost">Sign in</a>
+      <a href="onboarding.html" class="btn btn-primary"><i class="ri-rocket-line"></i> Start free</a>
+      <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="#features" onclick="closeMobileNav()">Features</a>
+  <a href="#modes" onclick="closeMobileNav()">Modes</a>
+  <a href="#pricing" onclick="closeMobileNav()">Pricing</a>
+  <a href="app.html">Sign in</a>
+  <a href="onboarding.html" style="background:var(--peach-ll);color:var(--peach);font-weight:600">Start free →</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="mesh-bg"><div class="mesh-blob"></div><div class="mesh-blob2"></div></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge"><i class="ri-sparkling-2-line"></i> Introducing Thread 2.0 — AI-native writing</div>
+      <h1 class="hero-title">
+        <span class="line1">Write together.</span>
+        <span class="line2">Think deeper.</span>
+        <span class="line3">Publish faster.</span>
+      </h1>
+      <p class="hero-sub">Thread is the collaborative writing platform built for journalists, legal teams, and content creators. AI-powered, workflow-first, beautifully simple.</p>
+      <div class="hero-ctas">
+        <a href="onboarding.html" class="btn btn-primary btn-lg"><i class="ri-rocket-line"></i> Start for free</a>
+        <a href="#features" class="btn btn-ghost btn-lg"><i class="ri-play-circle-line"></i> See how it works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">12k+</span><span class="stat-label">Active writers</span></div>
+        <div class="stat"><span class="stat-num">98%</span><span class="stat-label">Satisfaction rate</span></div>
+        <div class="stat"><span class="stat-num">4.9<i class="ri-star-fill" style="font-size:18px;color:var(--lemon)"></i></span><span class="stat-label">App store rating</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="app-window">
+        <div class="window-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div style="margin-left:10px;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">thread.so/editor</div>
+        </div>
+        <div class="window-body">
+          <div class="win-sidebar">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);padding:0 10px 6px">Documents</div>
+            <div class="win-nav-item active"><div class="win-nav-dot"></div>The Future of Journalism</div>
+            <div class="win-nav-item"><i class="ri-file-text-line" style="font-size:11px"></i>City Council Report</div>
+            <div class="win-nav-item"><i class="ri-file-text-line" style="font-size:11px"></i>Q4 Editorial Review</div>
+            <div class="win-nav-item"><i class="ri-file-text-line" style="font-size:11px"></i>Interview: Mayor W.</div>
+            <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+              <div class="win-nav-item"><i class="ri-eye-line" style="font-size:11px"></i>Review Queue <span style="background:var(--peach);color:#fff;font-size:8px;padding:1px 5px;border-radius:99px;margin-left:auto">3</span></div>
+              <div class="win-nav-item"><i class="ri-book-2-line" style="font-size:11px"></i>Knowledge Base</div>
+            </div>
+          </div>
+          <div class="win-main">
+            <div class="win-title">The Future of Local Journalism</div>
+            <div class="win-meta">
+              <span><i class="ri-user-3-line" style="font-size:10px"></i> Julia Chen</span>
+              <div class="win-badge">Draft</div>
+              <span><i class="ri-time-line" style="font-size:10px"></i> 2 min ago</span>
+            </div>
+            <div class="win-text">
+              <div class="win-line"></div><div class="win-line short"></div><div class="win-line"></div>
+              <div class="win-line shorter"></div><div class="win-line"></div><div class="win-line short"></div>
+            </div>
+            <div class="win-ai-box">
+              <div class="win-ai-label"><i class="ri-sparkling-2-line"></i> Thread AI</div>
+              <div class="win-ai-text">Local newsrooms are disappearing. But independent journalists are building something new in their place.<span class="typing-cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<section id="logos">
+  <div class="logos-label">Trusted by teams at</div>
+  <div style="overflow:hidden">
+    <div class="logos-track">
+      <span class="logo-item">Reuters</span><span class="logo-item">The Guardian</span><span class="logo-item">ProPublica</span><span class="logo-item">VICE Media</span><span class="logo-item">BuzzFeed News</span><span class="logo-item">Axios</span><span class="logo-item">The Atlantic</span><span class="logo-item">Substack</span><span class="logo-item">LexisNexis</span><span class="logo-item">Reed Smith LLP</span>
+      <span class="logo-item">Reuters</span><span class="logo-item">The Guardian</span><span class="logo-item">ProPublica</span><span class="logo-item">VICE Media</span><span class="logo-item">BuzzFeed News</span><span class="logo-item">Axios</span><span class="logo-item">The Atlantic</span><span class="logo-item">Substack</span><span class="logo-item">LexisNexis</span><span class="logo-item">Reed Smith LLP</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="section-pad">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Everything you need</div>
+      <h2 class="section-h2">Built for the way<br>writers actually work</h2>
+      <p class="section-lead">One workspace for planning, drafting, collaborating, reviewing, and publishing — with AI woven into every step.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal" style="--accent-tint:var(--peach-ll)">
+        <div class="feature-icon" style="background:var(--peach-ll)"><i class="ri-team-line" style="color:var(--peach)"></i></div>
+        <h3>Real-Time Collaboration</h3>
+        <p>See your colleagues' cursors, edits, and selections live. CRDT-based conflict resolution means no merge conflicts — ever.</p>
+      </div>
+      <div class="feature-card reveal" style="--accent-tint:var(--lav-ll)">
+        <div class="feature-icon" style="background:var(--lav-ll)"><i class="ri-sparkling-2-line" style="color:var(--lav)"></i></div>
+        <h3>AI Writing Assistant</h3>
+        <p>Trigger AI with a '/' command to continue, improve, shorten, or rewrite any passage. Context-aware and style-matched.</p>
+      </div>
+      <div class="feature-card reveal" style="--accent-tint:var(--mint-l)">
+        <div class="feature-icon" style="background:var(--mint-l)"><i class="ri-git-branch-line" style="color:var(--mint)"></i></div>
+        <h3>Editorial Workflow</h3>
+        <p>Move documents from Idea → Draft → Review → Approved → Published with role-gated transitions and audit trails.</p>
+      </div>
+      <div class="feature-card reveal" style="--accent-tint:var(--sky-l)">
+        <div class="feature-icon" style="background:var(--sky-l)"><i class="ri-search-eye-line" style="color:var(--sky)"></i></div>
+        <h3>Research Panel</h3>
+        <p>Search the web, pin sources, and auto-generate citations — all inside the editor. No tab-switching required.</p>
+      </div>
+      <div class="feature-card reveal" style="--accent-tint:var(--lemon-ll)">
+        <div class="feature-icon" style="background:var(--lemon-ll)"><i class="ri-book-2-line" style="color:var(--lemon)"></i></div>
+        <h3>Knowledge Base</h3>
+        <p>A wiki-style reference library for your team. Style guides, sources, and evergreen content — all searchable and linked.</p>
+      </div>
+      <div class="feature-card reveal" style="--accent-tint:var(--blush-ll)">
+        <div class="feature-icon" style="background:var(--blush-ll)"><i class="ri-building-2-line" style="color:var(--blush)"></i></div>
+        <h3>Multi-Tenant Teams</h3>
+        <p>Separate workspaces per team with full role-based access control. From solo writers to 200-person newsrooms.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODES -->
+<section id="modes" class="section-pad">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label">Profession Modes</div>
+      <h2 class="section-h2">A workspace built<br>for your craft</h2>
+      <p class="section-lead" style="margin:0 auto">Writer, journalist, or legal professional — Thread ships with tailored modes that match your specific workflow.</p>
+    </div>
+    <div class="modes-tabs reveal">
+      <button class="mode-tab active" data-mode="writer"><i class="ri-edit-2-line"></i> Writer</button>
+      <button class="mode-tab" data-mode="journalism"><i class="ri-newspaper-line"></i> Journalism</button>
+      <button class="mode-tab" data-mode="legal"><i class="ri-scales-line"></i> Legal</button>
+    </div>
+    <div class="modes-content reveal">
+      <div class="mode-panel active" id="mode-writer">
+        <div class="mode-layout">
+          <div>
+            <h3 style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;margin-bottom:8px">Writer Mode</h3>
+            <p style="color:var(--text2);font-size:15px">For individual creators, content teams, and agencies. Clean, focused, and flexible.</p>
+            <div class="mode-features">
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--peach-ll)"><i class="ri-file-list-2-line" style="color:var(--peach)"></i></div><div class="mode-feat-text"><h4>Flexible Templates</h4><p>Start from blank, essay, long-form, or newsletter structures.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--lav-ll)"><i class="ri-sparkling-2-line" style="color:var(--lav)"></i></div><div class="mode-feat-text"><h4>AI Continue & Improve</h4><p>Unblock yourself instantly with contextual AI suggestions.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--mint-l)"><i class="ri-bar-chart-line" style="color:var(--mint)"></i></div><div class="mode-feat-text"><h4>Word Count Goals</h4><p>Set targets per document with real-time progress tracking.</p></div></div>
+            </div>
+          </div>
+          <div class="mode-mockup">
+            <div class="mode-doc-header">The Art of Long-Form</div>
+            <div class="mode-doc-meta"><span><i class="ri-user-3-line"></i> Alex Kim</span><span class="mode-badge" style="background:var(--peach-ll);color:var(--peach)">Writer</span></div>
+            <div class="mode-lines"><div class="mode-line"></div><div class="mode-line s"></div><div class="mode-line"></div><div class="mode-line xs"></div><div class="mode-line"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mode-panel" id="mode-journalism">
+        <div class="mode-layout">
+          <div>
+            <h3 style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;margin-bottom:8px">Journalism Mode</h3>
+            <p style="color:var(--text2);font-size:15px">For reporters, editors, and newsrooms. Fast, verified, and deadline-aware.</p>
+            <div class="mode-features">
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--sky-l)"><i class="ri-newspaper-line" style="color:var(--sky)"></i></div><div class="mode-feat-text"><h4>AP Style Enforcement</h4><p>Real-time style checking with AP, Chicago, and custom house guides.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--lav-ll)"><i class="ri-sparkling-2-line" style="color:var(--lav)"></i></div><div class="mode-feat-text"><h4>AI Headline Generator</h4><p>Generate 5 headline variants instantly with one click.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--peach-ll)"><i class="ri-user-voice-line" style="color:var(--peach)"></i></div><div class="mode-feat-text"><h4>Source Tracking</h4><p>Log sources inline, attach documents, flag for verification.</p></div></div>
+            </div>
+          </div>
+          <div class="mode-mockup">
+            <div class="mode-doc-header">City Council Votes 7-2</div>
+            <div class="mode-doc-meta"><span><i class="ri-user-3-line"></i> Sarah Chen</span><span class="mode-badge" style="background:var(--sky-l);color:var(--sky)">Breaking</span></div>
+            <div class="mode-lines"><div class="mode-line"></div><div class="mode-line s"></div><div class="mode-line"></div><div class="mode-line xs"></div><div class="mode-line"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mode-panel" id="mode-legal">
+        <div class="mode-layout">
+          <div>
+            <h3 style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;margin-bottom:8px">Legal Mode</h3>
+            <p style="color:var(--text2);font-size:15px">For attorneys, paralegals, and legal teams. Precise, tracked, and compliant.</p>
+            <div class="mode-features">
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--blush-ll)"><i class="ri-git-commit-line" style="color:var(--blush)"></i></div><div class="mode-feat-text"><h4>Always-On Track Changes</h4><p>Every edit tracked by default with author and timestamp.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--lav-ll)"><i class="ri-shield-check-line" style="color:var(--lav)"></i></div><div class="mode-feat-text"><h4>AI Clause Review</h4><p>Identify missing clauses, ambiguous language, and risk flagging.</p></div></div>
+              <div class="mode-feat"><div class="mode-feat-icon" style="background:var(--mint-l)"><i class="ri-book-3-line" style="color:var(--mint)"></i></div><div class="mode-feat-text"><h4>Bluebook Citations</h4><p>Auto-format legal citations in Bluebook, ALWD, and custom formats.</p></div></div>
+            </div>
+          </div>
+          <div class="mode-mockup">
+            <div class="mode-doc-header">Settlement Agreement v4</div>
+            <div class="mode-doc-meta"><span><i class="ri-user-3-line"></i> R. Patel, Esq.</span><span class="mode-badge" style="background:var(--blush-ll);color:var(--blush)">Under Review</span></div>
+            <div class="mode-lines"><div class="mode-line"></div><div class="mode-line s"></div><div class="mode-line"></div><div class="mode-line xs"></div><div class="mode-line"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI SECTION -->
+<section class="section-pad" style="background:var(--bg2)">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label">AI-Powered</div>
+      <h2 class="section-h2">Your AI writing partner,<br>always in context</h2>
+      <p class="section-lead" style="margin:0 auto">Thread's AI has read your entire document, your style guide, and your knowledge base. Every suggestion is relevant — not generic.</p>
+    </div>
+    <div class="ai-demo reveal">
+      <div class="ai-demo-header">
+        <div class="ai-avatar-box"><i class="ri-sparkling-2-line"></i></div>
+        <div>
+          <div class="ai-demo-title">Thread AI — Journalism Mode</div>
+          <div class="ai-demo-sub">Context-aware · Style-matched · Always available</div>
+        </div>
+      </div>
+      <div class="ai-command" id="aiCommand"><i class="ri-sparkling-2-line"></i> <span id="aiCommandText">continue</span></div>
+      <div class="ai-response" id="aiResponse">The revenue models emerging across this new ecosystem are experimental by design: membership fees, foundation grants, events revenue, and an increasingly common hybrid approach. None of them replicate the scale of legacy advertising. But many are proving sustainable — and a handful are genuinely thriving.</div>
+      <div class="ai-commands-list">
+        <div class="ai-cmd-chip active" data-cmd="continue" data-resp="The revenue models emerging across this new ecosystem are experimental by design: membership fees, foundation grants, events revenue, and an increasingly common hybrid approach. None of them replicate the scale of legacy advertising. But many are proving sustainable."><i class="ri-arrow-right-circle-line"></i> Continue</div>
+        <div class="ai-cmd-chip" data-cmd="improve" data-resp="✨ Suggested rewrite: Consider opening with the most striking statistic before adding context. The impact lands harder when readers grasp the scale before you explain the cause. Lead with loss, follow with hope."><i class="ri-magic-line"></i> Improve</div>
+        <div class="ai-cmd-chip" data-cmd="shorten" data-resp="📝 Condensed: Local journalism is disappearing fast — thousands of papers closed since 2005. But in the rubble, independent journalists are quietly building nonprofit newsrooms that are scrappy, local, and showing early signs of survival."><i class="ri-compress-v-line"></i> Shorten</div>
+        <div class="ai-cmd-chip" data-cmd="headline" data-resp="📰 Headline options:\n1. After the Newsroom: Who Covers Your Town Now?\n2. 2,500 Papers Gone — What Comes Next?\n3. The Journalists Rebuilding Local News From Scratch\n4. News Deserts Are Spreading. So Is a Solution.\n5. The Death — and Quiet Rebirth — of Local Journalism"><i class="ri-newspaper-line"></i> Headlines</div>
+        <div class="ai-cmd-chip" data-cmd="summarize" data-resp="📋 Three-sentence summary: Local journalism in the US has declined sharply since 2005, with thousands of newspapers closing and leaving communities without accountability reporting. A new generation of journalists is responding with nonprofit, reader-supported models. These entities show early promise of sustainability."><i class="ri-file-text-line"></i> Summarize</div>
+        <div class="ai-cmd-chip" data-cmd="research" data-resp="🔍 Found 3 relevant sources in your Knowledge Base:\n• Reuters Institute Digital News Report 2024\n• AP Style Guide: Attribution and Quotes\n• Media Consolidation Briefing (2025)\n\nSuggested searches: 'newspaper closures US 2024', 'nonprofit newsroom funding models'"><i class="ri-search-eye-line"></i> Research</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow" class="section-pad">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label">Editorial Pipeline</div>
+      <h2 class="section-h2">From idea to published,<br>without the chaos</h2>
+      <p class="section-lead" style="margin:0 auto">Thread's workflow moves every document through a clear pipeline — with role-gated transitions, notifications, and a full audit trail.</p>
+    </div>
+    <div class="workflow-pipeline reveal">
+      <div class="workflow-stage"><div class="stage-count">01</div><div class="stage-name">Idea</div><div class="stage-badge" style="background:var(--bg3);color:var(--text3)"><i class="ri-lightbulb-line"></i></div></div>
+      <div class="workflow-stage"><div class="stage-count">02</div><div class="stage-name">Draft</div><div class="stage-badge" style="background:var(--lemon-l);color:#92400e"><i class="ri-edit-2-line"></i></div></div>
+      <div class="workflow-stage"><div class="stage-count">03</div><div class="stage-name">Review</div><div class="stage-badge" style="background:var(--sky-l);color:var(--sky)"><i class="ri-eye-line"></i></div></div>
+      <div class="workflow-stage"><div class="stage-count">04</div><div class="stage-name">Approved</div><div class="stage-badge" style="background:var(--mint-l);color:var(--mint)"><i class="ri-checkbox-circle-line"></i></div></div>
+      <div class="workflow-stage"><div class="stage-count">05</div><div class="stage-name">Revision</div><div class="stage-badge" style="background:var(--blush-ll);color:var(--blush)"><i class="ri-refresh-line"></i></div></div>
+      <div class="workflow-stage"><div class="stage-count">06</div><div class="stage-name">Published</div><div class="stage-badge" style="background:var(--lav-ll);color:var(--lav)"><i class="ri-send-plane-line"></i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section-pad" style="background:var(--bg2)">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <h2 class="section-h2">Loved by writing teams</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="t-stars"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+        <div class="t-quote">"Thread replaced three tools we were juggling — Docs for writing, Slack for feedback, and Asana for workflow. Everything is in one place now."</div>
+        <div class="t-author"><div class="t-avatar" style="background:linear-gradient(135deg,var(--peach),var(--blush))">SR</div><div><div class="t-name">Sana Rahman</div><div class="t-role">Managing Editor, The Daily Brief</div></div></div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="t-stars"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+        <div class="t-quote">"The AI assistant in Journalism Mode is genuinely useful — it knows AP Style, understands lede structure, and helps me hit deadlines without cutting corners."</div>
+        <div class="t-author"><div class="t-avatar" style="background:linear-gradient(135deg,var(--sky),var(--lav))">MK</div><div><div class="t-name">Marcus Klein</div><div class="t-role">Senior Reporter, City Watch</div></div></div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="t-stars"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div>
+        <div class="t-quote">"Legal Mode with track changes and AI clause review has made our document review cycle 40% faster. The Bluebook citation tool alone is worth the subscription."</div>
+        <div class="t-author"><div class="t-avatar" style="background:linear-gradient(135deg,var(--mint),var(--sky))">PN</div><div><div class="t-name">Priya Nair</div><div class="t-role">Senior Associate, Vakil & Partners</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="section-pad">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-h2">Simple, honest pricing</h2>
+      <p class="section-lead" style="margin:0 auto">Start free, scale when you're ready. No hidden fees, no surprise overages.</p>
+    </div>
+    <div class="pricing-toggle reveal">
+      <span class="toggle-label">Monthly</span>
+      <div class="toggle-track" id="billingToggle" onclick="toggleBilling()"><div class="toggle-thumb"></div></div>
+      <span class="toggle-label">Annual</span>
+      <span class="savings-badge" id="savingsBadge"><i class="ri-price-tag-3-line"></i> Save 20%</span>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="pricing-card">
+        <div class="plan-name">Solo</div>
+        <div class="plan-price" id="price-solo"><sup>$</sup>0<span class="period">/mo</span></div>
+        <div class="plan-desc">For individual writers and freelancers just getting started.</div>
+        <div class="plan-features">
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>5 documents</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>AI writing assistant (50 uses/mo)</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>1 profession mode</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Community support</div>
+        </div>
+        <a href="onboarding.html" class="btn btn-ghost" style="width:100%;justify-content:center"><i class="ri-user-add-line"></i> Get started free</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="plan-name">Team</div>
+        <div class="plan-price" id="price-team"><sup>$</sup>18<span class="period">/user/mo</span></div>
+        <div class="plan-desc">For writing teams, newsrooms, and agencies that need power features.</div>
+        <div class="plan-features">
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Unlimited documents</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Unlimited AI assistance</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>All 3 profession modes</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Full editorial workflow</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Knowledge base</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Priority support</div>
+        </div>
+        <a href="onboarding.html" class="btn btn-primary" style="width:100%;justify-content:center"><i class="ri-rocket-line"></i> Start 14-day trial</a>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price" style="font-size:36px">Custom</div>
+        <div class="plan-desc">For newsrooms, law firms, and agencies at scale.</div>
+        <div class="plan-features">
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Everything in Team</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>SSO + SAML / OIDC</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>SOC 2 Type II compliance</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Custom AI personas</div>
+          <div class="plan-feat"><div class="plan-feat-icon"><i class="ri-check-line"></i></div>Dedicated CSM + SLA</div>
+        </div>
+        <a href="#cta-section" class="btn btn-ghost" style="width:100%;justify-content:center"><i class="ri-mail-send-line"></i> Contact sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section-pad" style="background:var(--bg2)">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <h2 class="section-h2">Frequently asked</h2>
+    </div>
+    <div class="faq-list reveal">
+      <div class="faq-item open">
+        <div class="faq-q" onclick="toggleFaq(this)">How is Thread different from Google Docs?<div class="faq-icon"><i class="ri-add-line"></i></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Thread is purpose-built for professional writers. While Google Docs offers great basic collaboration, Thread adds an AI writing assistant, editorial workflow states, a knowledge base, research panel, and profession-specific modes — all in one integrated workspace designed for writing teams.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is my data private and secure?<div class="faq-icon"><i class="ri-add-line"></i></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Yes. All data is encrypted at rest (AES-256) and in transit (TLS 1.3). Each organization's data is fully isolated — no shared tables for content. We're pursuing SOC 2 Type II certification and are GDPR and CCPA compliant.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Can I import my existing documents?<div class="faq-icon"><i class="ri-add-line"></i></div></div>
+        <div class="faq-a"><div class="faq-a-inner">Yes — Thread supports import from Google Docs and Notion, with Word (.docx) import also available. We've designed the import flow to preserve formatting and comments so your team can switch without losing work.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What AI model powers the writing assistant?<div class="faq-icon"><i class="ri-add-line"></i></div></div>
+        <div class="faq-a"><div class="faq-a-inner">The AI assistant is powered by Anthropic's Claude — one of the most capable writing models available. The AI has full context of your document, style guide, and knowledge base, making suggestions far more relevant than generic AI tools.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Is there a mobile app?<div class="faq-icon"><i class="ri-add-line"></i></div></div>
+        <div class="faq-a"><div class="faq-a-inner">iOS and Android apps are on the roadmap for v2.0. The web app is fully responsive and works great on mobile browsers in the meantime, with touch-optimized interactions throughout.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta-section" class="section-pad" style="padding:120px 0">
+  <div class="mesh-bg"><div class="mesh-blob"></div><div class="mesh-blob2"></div></div>
+  <div class="container" style="text-align:center;position:relative;z-index:1">
+    <div class="reveal">
+      <h2 class="cta-title">Ready to write better,<br>together?</h2>
+      <p class="cta-sub">Join thousands of writers already using Thread. Free to start, no credit card required.</p>
+      <div class="signup-form">
+        <input type="email" class="signup-input" id="ctaEmail" placeholder="Enter your work email">
+        <button class="btn btn-primary btn-lg" onclick="handleSignup(this)"><i class="ri-send-plane-line"></i> Get early access</button>
+      </div>
+      <p style="margin-top:16px;font-size:13px;color:var(--text3)">No credit card required · Free forever plan available · Cancel anytime</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="logo" style="font-size:20px;margin-bottom:12px;display:inline-flex">
+          <div class="logo-mark" style="width:30px;height:30px;border-radius:8px"><i class="ri-thread-line" style="font-size:15px"></i></div>
+          <div class="logo-name"><span>Thread</span></div>
+        </a>
+        <p class="footer-tagline">Every word, perfectly placed. The writing platform built for professionals who care about craft.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <span style="font-size:11px;padding:3px 9px;background:var(--mint-l);color:var(--mint);border-radius:100px;font-weight:600;display:flex;align-items:center;gap:4px"><i class="ri-shield-check-line"></i> SOC 2 In Progress</span>
+          <span style="font-size:11px;padding:3px 9px;background:var(--sky-l);color:var(--sky);border-radius:100px;font-weight:600;display:flex;align-items:center;gap:4px"><i class="ri-global-line"></i> GDPR</span>
+          <span style="font-size:11px;padding:3px 9px;background:var(--peach-ll);color:var(--peach);border-radius:100px;font-weight:600;display:flex;align-items:center;gap:4px"><i class="ri-eye-line"></i> WCAG AA</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features"><i class="ri-sparkling-2-line"></i> Features</a>
+        <a href="#modes"><i class="ri-focus-3-line"></i> Profession Modes</a>
+        <a href="#pricing"><i class="ri-price-tag-3-line"></i> Pricing</a>
+        <a href="#"><i class="ri-git-commit-line"></i> Changelog</a>
+        <a href="#"><i class="ri-road-map-line"></i> Roadmap</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="#"><i class="ri-book-2-line"></i> Documentation</a>
+        <a href="#"><i class="ri-code-s-slash-line"></i> API Reference</a>
+        <a href="#"><i class="ri-file-copy-2-line"></i> Templates</a>
+        <a href="#"><i class="ri-quill-pen-line"></i> Blog</a>
+        <a href="#"><i class="ri-checkbox-circle-line"></i> Status</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#"><i class="ri-team-line"></i> About</a>
+        <a href="#"><i class="ri-briefcase-line"></i> Careers</a>
+        <a href="#"><i class="ri-shield-user-line"></i> Privacy</a>
+        <a href="#"><i class="ri-file-text-line"></i> Terms</a>
+        <a href="#"><i class="ri-mail-line"></i> Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span><i class="ri-copyright-line"></i> 2026 Thread. Made with <i class="ri-heart-fill" style="color:var(--blush)"></i> for writers everywhere.</span>
+      <div class="footer-socials">
+        <a class="social-btn" href="#" aria-label="Twitter/X"><i class="ri-twitter-x-line"></i></a>
+        <a class="social-btn" href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a>
+        <a class="social-btn" href="#" aria-label="GitHub"><i class="ri-github-fill"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── THEME (localStorage persistent) ──────────────────────────────
+const LS_THEME = 'thread_theme';
+function getTheme(){ return localStorage.getItem(LS_THEME) || 'light'; }
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem(LS_THEME, t);
+  document.getElementById('themeIcon').className = t === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
+}
+applyTheme(getTheme());
+document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+
+// ── NAV SCROLL ───────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ── MOBILE NAV ───────────────────────────────────────────────────
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('mobileNav').classList.toggle('open');
+});
+function closeMobileNav(){ document.getElementById('mobileNav').classList.remove('open'); }
+
+// ── REVEAL ON SCROLL ─────────────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── MODE TABS ────────────────────────────────────────────────────
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('mode-' + tab.dataset.mode).classList.add('active');
+  });
+});
+
+// ── AI DEMO CHIPS ────────────────────────────────────────────────
+document.querySelectorAll('.ai-cmd-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.ai-cmd-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    document.getElementById('aiCommandText').textContent = chip.dataset.cmd;
+    const resp = chip.dataset.resp.replace(/\\n/g, '\n');
+    const el = document.getElementById('aiResponse');
+    el.style.opacity = '0';
+    setTimeout(() => { el.textContent = resp; el.style.opacity = '1'; el.style.transition = 'opacity .4s'; }, 200);
+  });
+});
+
+// ── PRICING TOGGLE ───────────────────────────────────────────────
+let annual = false;
+function toggleBilling(){
+  annual = !annual;
+  document.getElementById('billingToggle').classList.toggle('on', annual);
+  document.getElementById('savingsBadge').style.opacity = annual ? '1' : '0';
+  document.getElementById('price-solo').innerHTML = `<sup>$</sup>0<span class="period">/mo</span>`;
+  document.getElementById('price-team').innerHTML = annual
+    ? `<sup>$</sup>14<span class="period">/user/mo</span>`
+    : `<sup>$</sup>18<span class="period">/user/mo</span>`;
+}
+
+// ── FAQ ACCORDION ────────────────────────────────────────────────
+function toggleFaq(el){
+  const item = el.parentElement;
+  const a = item.querySelector('.faq-a');
+  const inner = item.querySelector('.faq-a-inner');
+  const isOpen = item.classList.contains('open');
+  // close all
+  document.querySelectorAll('.faq-item').forEach(f => {
+    f.classList.remove('open');
+    f.querySelector('.faq-a').style.height = '0';
+  });
+  if(!isOpen){
+    item.classList.add('open');
+    a.style.height = inner.offsetHeight + 'px';
+  }
+}
+// Init first open
+const firstFaq = document.querySelector('.faq-item.open');
+if(firstFaq){ const inner = firstFaq.querySelector('.faq-a-inner'); firstFaq.querySelector('.faq-a').style.height = inner.offsetHeight + 20 + 'px'; }
+
+// ── CTA EMAIL SIGNUP ─────────────────────────────────────────────
+function handleSignup(btn){
+  const email = document.getElementById('ctaEmail').value.trim();
+  if(!email || !email.includes('@')){ document.getElementById('ctaEmail').style.borderColor = 'var(--blush)'; return; }
+  // Save email to localStorage
+  const signups = JSON.parse(localStorage.getItem('thread_signups') || '[]');
+  if(!signups.includes(email)){ signups.push(email); localStorage.setItem('thread_signups', JSON.stringify(signups)); }
+  btn.innerHTML = '<i class="ri-check-line"></i> You\'re on the list!';
+  btn.style.background = 'var(--mint)';
+  btn.disabled = true;
+  document.getElementById('ctaEmail').value = '';
+  setTimeout(() => window.location.href = 'onboarding.html', 1200);
+}
+</script>
+</body>
+</html>
