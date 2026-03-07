@@ -1,160 +1,98 @@
-$(function () {
 
-  /* ═══ THEME ═══ */
-  let theme = localStorage.getItem('tws-theme') || 'light';
-  applyTheme(theme);
-
-  function applyTheme(t) {
-    $('html').attr('data-theme', t);
-    theme = t;
-    localStorage.setItem('tws-theme', t);
-    $('#themeToggle').text(t === 'dark' ? '☀️' : '🌸');
-  }
-
-  $('#themeToggle').on('click', function () {
-    applyTheme(theme === 'dark' ? 'light' : 'dark');
-  });
-
-  /* ═══ SCROLL NAV ═══ */
-  $(window).on('scroll', function () {
-    if ($(this).scrollTop() > 20) {
-      $('nav').addClass('scrolled');
-    } else {
-      $('nav').removeClass('scrolled');
+    // ── THEME (localStorage persistent) ──────────────────────────────
+    const LS_THEME = 'thread_theme';
+    function getTheme() { return localStorage.getItem(LS_THEME) || 'light'; }
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem(LS_THEME, t);
+      document.getElementById('themeIcon').className = t === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
     }
-  });
+    applyTheme(getTheme());
+    document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
 
-  /* ═══ MOBILE MENU ═══ */
-  $('#hamburger').on('click', function () {
-    $('#mobileMenu').toggleClass('open');
-  });
-
-  function closeMobile() {
-    $('#mobileMenu').removeClass('open');
-  }
-
-  $('#mobileMenu a').on('click', function () {
-    closeMobile();
-  });
-
-  /* ═══ MODE TABS ═══ */
-  $('.mode-tab').on('click', function () {
-    const mode = $(this).data('mode');
-    $('.mode-tab').removeClass('active');
-    $(this).addClass('active');
-    $('.mode-panel').removeClass('active');
-    $('#mode-' + mode).addClass('active');
-  });
-
-  /* ═══ AI DEMO ═══ */
-  const aiDemoContent = {
-    'continue': {
-      cmd: 'continue',
-      text: 'The rise of independent newsletters and community-funded reporting platforms suggests that audiences haven\'t lost their appetite for local news — they\'ve lost faith in the institutions that once delivered it. This gap represents both a crisis and an extraordinary opportunity.'
-    },
-    'improve': {
-      cmd: 'improve',
-      text: '✨ Suggested improvement: Consider leading with the most striking statistic (2,500 newspapers lost since 2005) before contextualizing it. The impact will land harder and immediately signal the scale of the crisis to readers.'
-    },
-    'shorten': {
-      cmd: 'shorten',
-      text: '📝 Shortened: Local journalism is disappearing fast. Since 2005, 2,500+ newspapers have closed. But in the ruins, independent journalists are quietly building a new model — nonprofit, hyper-local, and increasingly viable.'
-    },
-    'headline': {
-      cmd: 'headline',
-      text: '📰 5 Headline Options:\n1. After the Newsroom: Who Covers Your Town Now?\n2. 2,500 Newspapers Gone. What Comes Next?\n3. The Journalists Rebuilding Local News from Scratch\n4. News Deserts Are Spreading — But So Is a Solution\n5. The Death and Quiet Rebirth of Local Journalism'
-    },
-    'research': {
-      cmd: 'research',
-      text: '🔍 Found in Knowledge Base:\n• Reuters Institute Digital News Report 2024\n• Columbia Journalism Review: "News Desert" mapping\n• Local Media Association annual report\n• Related: "Media Consolidation Briefing 2025"'
-    },
-    'tone [formal]': {
-      cmd: 'tone [formal]',
-      text: '🎓 Formal tone applied: The accelerating attrition of regional and local print journalism since 2005 has produced a significant democratic deficit — one that independent, digitally-native newsrooms are now endeavouring to address through innovative funding and distribution strategies.'
-    }
-  };
-
-  function switchAI(btn, cmd) {
-    $('.ai-cmd-chip').removeClass('active');
-    $(btn).addClass('active');
-    const data = aiDemoContent[cmd] || aiDemoContent['continue'];
-    $('#aiCommand').text(data.cmd);
-    const $resp = $('#aiDemoResponse');
-    $resp.css('opacity', 0);
-    setTimeout(function () {
-      $resp.text(data.text).animate({ opacity: 1 }, 300);
-    }, 150);
-  }
-
-  // expose for onclick attributes on chip buttons
-  window.switchAI = function (el, cmd) { switchAI(el, cmd); };
-
-  // wire up via jQuery too
-  $(document).on('click', '.ai-cmd-chip', function () {
-    const cmd = $(this).text().replace(/^\/\s*/, '').trim();
-    switchAI(this, cmd);
-  });
-
-  /* ═══ PRICING TOGGLE ═══ */
-  const monthlyPrices = { solo: 0, team: 18, pro: 32 };
-  const annualPrices  = { solo: 0, team: 13, pro: 23 };
-  let isAnnual = false;
-
-  $('#billingToggle').on('click', function () {
-    isAnnual = !isAnnual;
-    $(this).toggleClass('on', isAnnual);
-
-    const prices = isAnnual ? annualPrices : monthlyPrices;
-    $('#price-solo').text(prices.solo);
-    $('#price-team').text(prices.team);
-
-    if (isAnnual) {
-      $('#savingsBadge').css('opacity', 1);
-    } else {
-      $('#savingsBadge').css('opacity', 0);
-    }
-  });
-
-  /* ═══ FAQ ACCORDION ═══ */
-  $(document).on('click', '.faq-q', function () {
-    const $item = $(this).closest('.faq-item');
-    $item.toggleClass('open');
-  });
-
-  /* ═══ CTA SIGNUP ═══ */
-  $(document).on('click', '#ctaSignupBtn', function () {
-    handleSignup(this);
-  });
-
-  function handleSignup(btn) {
-    const email = $('#ctaEmail').val().trim();
-    if (!email || !email.includes('@')) {
-      $('#ctaEmail').css('border-color', 'var(--blush)');
-      setTimeout(function () { $('#ctaEmail').css('border-color', ''); }, 1500);
-      return;
-    }
-    $(btn).text('🎉 You\'re on the list!').prop('disabled', true);
-    $('#ctaEmail').prop('disabled', true);
-  }
-
-  window.handleSignup = function (btn) { handleSignup(btn); };
-
-  /* ═══ SCROLL REVEAL ═══ */
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          $(entry.target).addClass('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    $('.reveal').each(function () {
-      observer.observe(this);
+    // ── NAV SCROLL ───────────────────────────────────────────────────
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
     });
-  } else {
-    $('.reveal').addClass('visible');
-  }
 
-});
+    // ── MOBILE NAV ───────────────────────────────────────────────────
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobileNav').classList.toggle('open');
+    });
+    function closeMobileNav() { document.getElementById('mobileNav').classList.remove('open'); }
+
+    // ── REVEAL ON SCROLL ─────────────────────────────────────────────
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── MODE TABS ────────────────────────────────────────────────────
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('mode-' + tab.dataset.mode).classList.add('active');
+      });
+    });
+
+    // ── AI DEMO CHIPS ────────────────────────────────────────────────
+    document.querySelectorAll('.ai-cmd-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.ai-cmd-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById('aiCommandText').textContent = chip.dataset.cmd;
+        const resp = chip.dataset.resp.replace(/\\n/g, '\n');
+        const el = document.getElementById('aiResponse');
+        el.style.opacity = '0';
+        setTimeout(() => { el.textContent = resp; el.style.opacity = '1'; el.style.transition = 'opacity .4s'; }, 200);
+      });
+    });
+
+    // ── PRICING TOGGLE ───────────────────────────────────────────────
+    let annual = false;
+    function toggleBilling() {
+      annual = !annual;
+      document.getElementById('billingToggle').classList.toggle('on', annual);
+      document.getElementById('savingsBadge').style.opacity = annual ? '1' : '0';
+      document.getElementById('price-solo').innerHTML = `<sup>$</sup>0<span class="period">/mo</span>`;
+      document.getElementById('price-team').innerHTML = annual
+        ? `<sup>$</sup>14<span class="period">/user/mo</span>`
+        : `<sup>$</sup>18<span class="period">/user/mo</span>`;
+    }
+
+    // ── FAQ ACCORDION ────────────────────────────────────────────────
+    function toggleFaq(el) {
+      const item = el.parentElement;
+      const a = item.querySelector('.faq-a');
+      const inner = item.querySelector('.faq-a-inner');
+      const isOpen = item.classList.contains('open');
+      // close all
+      document.querySelectorAll('.faq-item').forEach(f => {
+        f.classList.remove('open');
+        f.querySelector('.faq-a').style.height = '0';
+      });
+      if (!isOpen) {
+        item.classList.add('open');
+        a.style.height = inner.offsetHeight + 'px';
+      }
+    }
+    // Init first open
+    const firstFaq = document.querySelector('.faq-item.open');
+    if (firstFaq) { const inner = firstFaq.querySelector('.faq-a-inner'); firstFaq.querySelector('.faq-a').style.height = inner.offsetHeight + 20 + 'px'; }
+
+    // ── CTA EMAIL SIGNUP ─────────────────────────────────────────────
+    function handleSignup(btn) {
+      const email = document.getElementById('ctaEmail').value.trim();
+      if (!email || !email.includes('@')) { document.getElementById('ctaEmail').style.borderColor = 'var(--blush)'; return; }
+      // Save email to localStorage
+      const signups = JSON.parse(localStorage.getItem('thread_signups') || '[]');
+      if (!signups.includes(email)) { signups.push(email); localStorage.setItem('thread_signups', JSON.stringify(signups)); }
+      btn.innerHTML = '<i class="ri-check-line"></i> You\'re on the list!';
+      btn.style.background = 'var(--mint)';
+      btn.disabled = true;
+      document.getElementById('ctaEmail').value = '';
+      setTimeout(() => window.location.href = 'onboarding.html', 1200);
+    }
+  

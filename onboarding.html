@@ -1,879 +1,429 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Get Started — Thread</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --peach:#F4845F;--peach-l:#FFDAB9;--peach-ll:#FFF5EF;--peach-d:#C4562B;
-  --lemon:#F5C842;--lemon-l:#FFF3B0;--lemon-ll:#FFFBEC;
-  --blush:#F472B6;--blush-l:#FFD6E0;--blush-ll:#FFF0F5;
-  --lav:#A855F7;--lav-l:#E8D5FF;--lav-ll:#F5EDFF;
-  --mint:#10B981;--mint-l:#D1FAE5;
-  --sky:#3B82F6;--sky-l:#DBEAFE;
-  --bg:#FFFBF7;--bg2:#FFF3E0;--bg3:#FFE4CC;
-  --border:#F0D9C8;--border2:#E8C8B0;
-  --text:#1A1A2E;--text2:#5C4B3A;--text3:#9C8575;
-  --card:#FFFFFF;
-  --shadow:0 4px 24px rgba(244,132,95,.10);
-  --shadow-lg:0 16px 48px rgba(244,132,95,.18);
-  --ease:cubic-bezier(.4,0,.2,1);
-  --spring:cubic-bezier(.34,1.56,.64,1);
-}
-[data-theme="dark"]{
-  --bg:#0A0A0A;--bg2:#141414;--bg3:#1E1E1E;
-  --border:#2D2D2D;--border2:#3D3D3D;
-  --text:#F9FAFB;--text2:#D1D5DB;--text3:#6B7280;
-  --card:#141414;
-  --peach:#F97316;--peach-l:#431407;--peach-ll:#1a0a00;
-  --lemon:#F59E0B;--lemon-l:#451a03;--lemon-ll:#1a0a00;
-  --blush:#EF4444;--blush-l:#450a0a;--blush-ll:#1a0000;
-  --lav:#A855F7;--lav-l:#2e1065;--lav-ll:#0a0018;
-  --mint:#22C55E;--mint-l:#052e16;
-  --sky:#3B82F6;--sky-l:#1e3a8a;
-  --shadow:0 4px 24px rgba(0,0,0,.5);
-  --shadow-lg:0 16px 48px rgba(0,0,0,.7);
-}
-
-html,body{height:100%}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
-
-.mesh-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.mesh-bg::before{content:'';position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,var(--peach-l) 0%,transparent 70%);top:-200px;left:-100px;animation:mf1 9s ease-in-out infinite}
-.mesh-bg::after{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--lav-l) 0%,transparent 70%);bottom:-150px;right:-100px;animation:mf2 11s ease-in-out infinite}
-@keyframes mf1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,30px)}}
-@keyframes mf2{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,-30px)}}
-
-.onboarding-shell{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
-
-/* TOPBAR */
-.ob-top{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(12px);flex-shrink:0}
-.logo{display:flex;align-items:center;gap:9px;text-decoration:none;font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--text)}
-.logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--peach),var(--blush));display:flex;align-items:center;justify-content:center}
-.logo-mark i{color:#fff;font-size:16px}
-.logo-name span{color:var(--peach)}
-.theme-toggle{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .2s var(--spring)}
-.theme-toggle:hover{transform:rotate(-15deg) scale(1.1);background:var(--bg3);color:var(--text)}
-.theme-toggle i{font-size:17px}
-
-/* PROGRESS */
-.progress-bar{padding:20px 40px 0;max-width:640px;margin:0 auto;width:100%}
-.progress-steps{display:flex;align-items:center;gap:0;margin-bottom:8px}
-.progress-step{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all .3s var(--spring);cursor:default;flex-shrink:0;z-index:1}
-.progress-step i{font-size:13px}
-.progress-step.done{background:var(--peach);color:#fff;cursor:pointer}
-.progress-step.done:hover{transform:scale(1.15)}
-.progress-step.active{background:var(--peach);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--peach) 25%,transparent)}
-.progress-step.todo{background:var(--bg3);color:var(--text3)}
-.progress-line{flex:1;height:2px;background:var(--bg3);transition:background .5s}
-.progress-line.done{background:var(--peach)}
-.progress-label{text-align:center;font-size:13px;color:var(--text3)}
-.progress-label span{color:var(--peach);font-weight:600}
-
-/* STEPS */
-.steps-wrapper{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 20px 40px}
-.step{display:none;flex-direction:column;align-items:center;width:100%;max-width:600px;animation:stepIn .4s var(--spring) both}
-.step.active{display:flex}
-@keyframes stepIn{from{opacity:0;transform:translateX(30px) scale(.98)}to{opacity:1;transform:none}}
-.step-inner{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:44px 48px;width:100%;box-shadow:var(--shadow-lg)}
-
-/* Step icon */
-.step-icon-wrap{width:72px;height:72px;border-radius:20px;background:var(--peach-ll);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:iconPop .5s var(--spring) .1s both}
-@keyframes iconPop{from{transform:scale(0) rotate(-15deg)}to{transform:scale(1) rotate(0)}}
-.step-icon-wrap i{font-size:32px;color:var(--peach)}
-.step-title{font-family:'Fraunces',serif;font-size:28px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.2}
-.step-sub{font-size:15px;color:var(--text2);text-align:center;margin-bottom:32px;line-height:1.65}
-
-/* FORM */
-.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-.form-label{font-size:13px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:5px}
-.form-label i{font-size:14px;color:var(--text3)}
-.form-input{height:48px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:0 16px;outline:none;transition:all .2s var(--ease);width:100%}
-.form-input:focus{border-color:var(--lav);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--lav) 15%,transparent)}
-.form-input.error{border-color:var(--blush);animation:shake .3s}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.form-input::placeholder{color:var(--text3)}
-
-/* PASSWORD STRENGTH */
-.pw-strength{height:4px;border-radius:2px;background:var(--bg3);margin-top:6px;overflow:hidden}
-.pw-strength-bar{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0}
-.pw-hint{font-size:12px;margin-top:4px;color:var(--text3);display:flex;align-items:center;gap:4px}
-.pw-hint i{font-size:13px}
-
-/* SOCIAL LOGIN */
-.social-row{display:flex;gap:10px;margin-bottom:24px}
-.social-btn{flex:1;height:48px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .2s var(--ease);font-family:'DM Sans',sans-serif}
-.social-btn i{font-size:18px}
-.social-btn:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
-.divider{display:flex;align-items:center;gap:12px;margin-bottom:20px;color:var(--text3);font-size:13px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* OTP */
-.otp-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
-.otp-input{width:52px;height:64px;border-radius:14px;border:2px solid var(--border);background:var(--bg3);color:var(--text);font-family:'Fraunces',serif;font-size:28px;font-weight:700;text-align:center;outline:none;transition:all .2s;caret-color:transparent}
-.otp-input:focus{border-color:var(--peach);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--peach) 20%,transparent)}
-.otp-input.filled{border-color:var(--peach);background:var(--peach-ll)}
-.resend-row{text-align:center;font-size:14px;color:var(--text3)}
-.resend-btn{color:var(--lav);font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;font-size:14px;display:inline-flex;align-items:center;gap:4px}
-.resend-btn i{font-size:15px}
-.resend-btn:disabled{opacity:.4;cursor:default}
-.resend-timer{font-family:'Fraunces',serif;font-weight:700;color:var(--peach)}
-
-/* CARD GRID */
-.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-.card-grid.two{grid-template-columns:repeat(2,1fr)}
-.select-card{padding:16px 12px;border-radius:14px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .25s var(--spring);position:relative;user-select:none}
-.select-card:hover{border-color:var(--peach);background:var(--peach-ll);transform:translateY(-2px)}
-.select-card.selected{border-color:var(--peach);background:var(--peach-ll)}
-.select-card.selected::after{content:'';position:absolute;top:8px;right:10px;width:18px;height:18px;background:var(--peach);border-radius:50%;display:flex;align-items:center;justify-content:center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 17.9993L3.63574 11.6354L5.04996 10.2212L9.9997 15.1709Z'/%3E%3C/svg%3E");background-size:12px;background-repeat:no-repeat;background-position:center}
-.select-card-icon{font-size:28px;margin-bottom:8px;display:flex;align-items:center;justify-content:center}
-.select-card-icon i{font-size:26px;color:var(--text3)}
-.select-card.selected .select-card-icon i{color:var(--peach)}
-.select-card-label{font-size:13px;font-weight:600;color:var(--text)}
-
-/* TAGS */
-.tags-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.tag{padding:7px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--card);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s var(--ease);display:flex;align-items:center;gap:5px}
-.tag i{font-size:13px;color:var(--text3)}
-.tag:hover{border-color:var(--peach);color:var(--peach)}
-.tag:hover i{color:var(--peach)}
-.tag.selected{background:var(--peach);border-color:var(--peach);color:#fff}
-.tag.selected i{color:#fff}
-
-/* THEME PREVIEW */
-.theme-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-.theme-card{border:2px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s var(--spring)}
-.theme-card.selected{border-color:var(--peach);box-shadow:0 0 0 3px color-mix(in srgb,var(--peach) 20%,transparent)}
-.theme-card:hover{transform:translateY(-2px)}
-.theme-preview-light{height:80px;background:linear-gradient(135deg,#FFFBF7,#FFF3E0);display:flex;align-items:center;justify-content:center;gap:4px;flex-direction:column}
-.theme-preview-dark{height:80px;background:linear-gradient(135deg,#0A0A0A,#1E1E1E);display:flex;align-items:center;justify-content:center;gap:4px;flex-direction:column}
-.theme-preview-sys{height:80px;background:linear-gradient(135deg,#FFFBF7 50%,#0A0A0A 50%);display:flex;align-items:center;justify-content:center}
-.theme-preview-line{height:4px;border-radius:2px;background:color-mix(in srgb,#F4845F 60%,transparent);width:60px}
-.theme-preview-line2{height:4px;border-radius:2px;background:color-mix(in srgb,#F4845F 30%,transparent);width:40px}
-.theme-label{text-align:center;padding:8px;font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);display:flex;align-items:center;justify-content:center;gap:5px}
-.theme-label i{font-size:13px}
-
-/* FONT OPTIONS */
-.font-opt{border:2px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:all .2s var(--spring);margin-bottom:8px}
-.font-opt.selected{border-color:var(--peach);background:var(--peach-ll)}
-.font-opt:hover{border-color:var(--peach-l)}
-.font-opt-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px}
-.font-opt-preview{font-size:16px;color:var(--text)}
-
-/* TOGGLE PILL */
-.pref-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);margin-bottom:8px}
-.pref-label{display:flex;align-items:center;gap:9px}
-.pref-label i{font-size:18px;color:var(--text3)}
-.pref-label-text{font-size:14px;font-weight:600}
-.pref-label-sub{font-size:12px;color:var(--text3)}
-.pill-toggle{width:46px;height:26px;border-radius:100px;background:var(--bg3);border:1.5px solid var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-.pill-toggle.on{background:var(--peach);border-color:var(--peach)}
-.pill-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .25s var(--spring)}
-.pill-toggle.on .pill-thumb{transform:translateX(20px)}
-
-/* INVITE CHIPS */
-.invite-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;padding:8px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg3);margin-bottom:8px;cursor:text;transition:border-color .2s}
-.invite-chips:focus-within{border-color:var(--peach);background:var(--card)}
-.invite-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--peach-ll);border:1px solid var(--peach-l);border-radius:100px;font-size:13px;color:var(--peach);animation:chipIn .25s var(--spring)}
-@keyframes chipIn{from{transform:scale(0)}to{transform:scale(1)}}
-.invite-chip-remove{cursor:pointer;font-size:16px;font-weight:700;opacity:.6;transition:opacity .15s;line-height:1}
-.invite-chip-remove:hover{opacity:1}
-.invite-text-input{border:none;background:transparent;outline:none;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);min-width:160px;flex:1}
-.invite-text-input::placeholder{color:var(--text3)}
-
-/* ROLE CARDS */
-.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.role-card{padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s var(--spring)}
-.role-card:hover{border-color:var(--peach-l);background:var(--peach-ll)}
-.role-card.selected{border-color:var(--peach);background:var(--peach-ll)}
-.role-card i{font-size:20px;color:var(--text3);display:block;margin-bottom:4px}
-.role-card.selected i{color:var(--peach)}
-.role-card-name{font-size:12px;font-weight:600}
-
-/* URL SLUG */
-.url-preview{font-size:13px;color:var(--text3);margin-top:5px;padding:6px 12px;background:var(--bg3);border-radius:8px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px}
-.url-preview strong{color:var(--peach)}
-.url-check{font-size:12px;margin-top:4px;display:none;align-items:center;gap:5px}
-.url-check.ok{color:var(--mint)}.url-check.err{color:var(--blush)}
-.url-check i{font-size:13px}
-
-/* MODE PICK */
-.mode-pick-card{border:2px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:all .25s var(--spring);display:flex;gap:14px;align-items:flex-start;margin-bottom:10px}
-.mode-pick-card:hover{border-color:var(--peach-l);background:var(--peach-ll);transform:translateY(-1px)}
-.mode-pick-card.selected{border-color:var(--peach);background:var(--peach-ll)}
-.mode-pick-icon{width:44px;height:44px;border-radius:12px;background:var(--peach-ll);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
-.mode-pick-card.selected .mode-pick-icon{background:var(--peach)}
-.mode-pick-icon i{font-size:22px;color:var(--peach)}
-.mode-pick-card.selected .mode-pick-icon i{color:#fff}
-.mode-pick-title{font-size:15px;font-weight:700;margin-bottom:3px}
-.mode-pick-desc{font-size:13px;color:var(--text2);line-height:1.5}
-.mode-pick-feats{display:flex;flex-direction:column;gap:3px;margin-top:6px}
-.mode-pick-feat{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px}
-.mode-pick-feat i{font-size:12px;color:var(--peach)}
-.mode-pick-check{margin-left:auto;flex-shrink:0;color:var(--peach);font-size:20px}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .2s var(--ease);text-decoration:none;white-space:nowrap;justify-content:center}
-.btn i{font-size:16px}
-.btn:active{transform:scale(.97)}
-.btn-primary{background:var(--peach);color:#fff;box-shadow:0 4px 12px color-mix(in srgb,var(--peach) 40%,transparent)}
-.btn-primary:hover{background:var(--peach-d);transform:translateY(-1px)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
-.btn-ghost:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
-.btn-row{display:flex;gap:10px;margin-top:8px}
-.btn-row .btn{flex:1}
-.skip-link{text-align:center;margin-top:14px;font-size:14px;color:var(--text3)}
-.skip-link a{color:var(--text3);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-.skip-link a:hover{color:var(--peach)}
-
-@media(max-width:640px){.step-inner{padding:28px 24px}.otp-input{width:42px;height:54px;font-size:22px}.card-grid{grid-template-columns:1fr 1fr}.theme-cards{grid-template-columns:1fr 1fr 1fr}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started — Thread</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=JetBrains+Mono:wght@400&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/onboarding.css">
 </head>
+
 <body>
-<div class="mesh-bg"></div>
-<div class="onboarding-shell">
+  <div class="mesh-bg"></div>
+  <div class="onboarding-shell">
 
-  <!-- TOPBAR -->
-  <div class="ob-top">
-    <a href="index.html" class="logo">
-      <div class="logo-mark"><i class="ri-thread-line"></i></div>
-      <div class="logo-name"><span>Thread</span></div>
-    </a>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="ri-sun-line" id="themeIcon"></i></button>
-  </div>
-
-  <!-- PROGRESS BAR -->
-  <div class="progress-bar">
-    <div class="progress-steps" id="progressSteps"></div>
-    <div class="progress-label" id="progressLabel">Step <span>1</span> of 7</div>
-  </div>
-
-  <!-- STEPS WRAPPER -->
-  <div class="steps-wrapper">
-
-    <!-- STEP 1: Account Creation -->
-    <div class="step active" id="step-1">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-user-add-line"></i></div>
-        <div class="step-title">Create your account</div>
-        <div class="step-sub">Join thousands of professional writers already on Thread.</div>
-
-        <div class="social-row">
-          <button class="social-btn" onclick="socialLogin('Google')"><i class="ri-google-fill" style="color:#4285F4"></i> Continue with Google</button>
-          <button class="social-btn" onclick="socialLogin('GitHub')"><i class="ri-github-fill"></i> Continue with GitHub</button>
-        </div>
-        <div class="divider">or with email</div>
-
-        <div class="form-group">
-          <label class="form-label"><i class="ri-user-3-line"></i> Full Name</label>
-          <input type="text" class="form-input" id="fullName" placeholder="Priya Sharma" oninput="validateStep1()">
-        </div>
-        <div class="form-group">
-          <label class="form-label"><i class="ri-mail-line"></i> Email Address</label>
-          <input type="email" class="form-input" id="emailField" placeholder="priya@newsroom.co" oninput="validateStep1()">
-        </div>
-        <div class="form-group">
-          <label class="form-label"><i class="ri-lock-password-line"></i> Password</label>
-          <input type="password" class="form-input" id="pwField" placeholder="8+ characters" oninput="checkPassword(this.value)">
-          <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
-          <div class="pw-hint" id="pwHint"><i class="ri-information-line"></i> Enter a strong password</div>
-        </div>
-
-        <button class="btn btn-primary" style="width:100%" id="step1Btn" onclick="goNext()" disabled><i class="ri-arrow-right-line"></i> Create Account</button>
-        <div class="skip-link" style="margin-top:12px"><a href="app.html"><i class="ri-login-box-line"></i> Already have an account? Sign in</a></div>
-      </div>
+    <!-- TOPBAR -->
+    <div class="ob-top">
+      <a href="index.html" class="logo">
+        <div class="logo-mark"><i class="ri-thread-line"></i></div>
+        <div class="logo-name"><span>Thread</span></div>
+      </a>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="ri-sun-line"
+          id="themeIcon"></i></button>
     </div>
 
-    <!-- STEP 2: Email Verification -->
-    <div class="step" id="step-2">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-mail-send-line"></i></div>
-        <div class="step-title">Check your inbox</div>
-        <div class="step-sub">We sent a 6-digit code to <strong id="verifyEmail">your email</strong>. Enter it below.</div>
-
-        <div class="otp-row">
-          <input class="otp-input" id="otp0" maxlength="1" inputmode="numeric" oninput="otpInput(0,this)" onkeydown="otpKeydown(0,event)">
-          <input class="otp-input" id="otp1" maxlength="1" inputmode="numeric" oninput="otpInput(1,this)" onkeydown="otpKeydown(1,event)">
-          <input class="otp-input" id="otp2" maxlength="1" inputmode="numeric" oninput="otpInput(2,this)" onkeydown="otpKeydown(2,event)">
-          <input class="otp-input" id="otp3" maxlength="1" inputmode="numeric" oninput="otpInput(3,this)" onkeydown="otpKeydown(3,event)">
-          <input class="otp-input" id="otp4" maxlength="1" inputmode="numeric" oninput="otpInput(4,this)" onkeydown="otpKeydown(4,event)">
-          <input class="otp-input" id="otp5" maxlength="1" inputmode="numeric" oninput="otpInput(5,this)" onkeydown="otpKeydown(5,event)">
-        </div>
-
-        <div class="resend-row">
-          Didn't receive it? <button class="resend-btn" id="resendBtn" onclick="resendCode()" disabled><i class="ri-refresh-line"></i> Resend</button>
-          <span class="resend-timer" id="resendTimer">(60s)</span>
-        </div>
-
-        <div class="btn-row" style="margin-top:24px">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" id="step2Btn" onclick="goNext()" disabled><i class="ri-check-line"></i> Verify Email</button>
-        </div>
-      </div>
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar">
+      <div class="progress-steps" id="progressSteps"></div>
+      <div class="progress-label" id="progressLabel">Step <span>1</span> of 7</div>
     </div>
 
-    <!-- STEP 3: About You -->
-    <div class="step" id="step-3">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-hand-heart-line"></i></div>
-        <div class="step-title">Tell us about yourself</div>
-        <div class="step-sub">Help us tailor your Thread experience from day one.</div>
+    <!-- STEPS WRAPPER -->
+    <div class="steps-wrapper">
 
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-user-settings-line" style="color:var(--text3)"></i> Your Role</div>
-        <div class="card-grid" id="roleGrid">
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Writer"><div class="select-card-icon"><i class="ri-edit-2-line"></i></div><div class="select-card-label">Writer</div></div>
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Journalist"><div class="select-card-icon"><i class="ri-newspaper-line"></i></div><div class="select-card-label">Journalist</div></div>
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Legal Pro"><div class="select-card-icon"><i class="ri-scales-line"></i></div><div class="select-card-label">Legal Pro</div></div>
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Editor"><div class="select-card-icon"><i class="ri-quill-pen-line"></i></div><div class="select-card-label">Editor</div></div>
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Content Manager"><div class="select-card-icon"><i class="ri-folder-user-line"></i></div><div class="select-card-label">Content Manager</div></div>
-          <div class="select-card" onclick="selectCard(this,'role')" data-value="Other"><div class="select-card-icon"><i class="ri-more-line"></i></div><div class="select-card-label">Other</div></div>
-        </div>
+      <!-- STEP 1: Account Creation -->
+      <div class="step active" id="step-1">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-user-add-line"></i></div>
+          <div class="step-title">Create your account</div>
+          <div class="step-sub">Join thousands of professional writers already on Thread.</div>
 
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-file-list-2-line" style="color:var(--text3)"></i> Primary Writing Types <span style="font-weight:400;color:var(--text3)">(select all that apply)</span></div>
-        <div class="tags-row" id="typesTags">
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-article-line"></i>Articles & Blogs</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-newspaper-line"></i>News Stories</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-scales-line"></i>Legal Documents</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-film-line"></i>Scripts</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-megaphone-line"></i>Marketing Copy</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-code-s-slash-line"></i>Technical Writing</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-book-open-line"></i>Fiction</div>
-          <div class="tag" onclick="toggleTag(this)"><i class="ri-search-eye-line"></i>Research</div>
-        </div>
+          <div class="social-row">
+            <button class="social-btn" onclick="socialLogin('Google')"><i class="ri-google-fill"
+                style="color:#4285F4"></i> Continue with Google</button>
+            <button class="social-btn" onclick="socialLogin('GitHub')"><i class="ri-github-fill"></i> Continue with
+              GitHub</button>
+          </div>
+          <div class="divider">or with email</div>
 
-        <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
-        </div>
-      </div>
-    </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-user-3-line"></i> Full Name</label>
+            <input type="text" class="form-input" id="fullName" placeholder="Priya Sharma" oninput="validateStep1()">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-mail-line"></i> Email Address</label>
+            <input type="email" class="form-input" id="emailField" placeholder="priya@newsroom.co"
+              oninput="validateStep1()">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-lock-password-line"></i> Password</label>
+            <input type="password" class="form-input" id="pwField" placeholder="8+ characters"
+              oninput="checkPassword(this.value)">
+            <div class="pw-strength">
+              <div class="pw-strength-bar" id="pwBar"></div>
+            </div>
+            <div class="pw-hint" id="pwHint"><i class="ri-information-line"></i> Enter a strong password</div>
+          </div>
 
-    <!-- STEP 4: Organisation Setup -->
-    <div class="step" id="step-4">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-building-2-line"></i></div>
-        <div class="step-title">Set up your workspace</div>
-        <div class="step-sub">Create your team's home on Thread. You can always change this later.</div>
-
-        <div class="form-group">
-          <label class="form-label"><i class="ri-building-2-line"></i> Organisation Name</label>
-          <input type="text" class="form-input" id="orgName" placeholder="City Beat Newsroom" oninput="updateSlug(this.value)">
-        </div>
-        <div class="form-group">
-          <label class="form-label"><i class="ri-link"></i> URL Slug</label>
-          <input type="text" class="form-input" id="orgSlug" placeholder="city-beat-newsroom" oninput="checkSlug(this.value)">
-          <div class="url-preview"><i class="ri-global-line"></i> thread.so/<strong id="slugVal">your-org</strong></div>
-          <div class="url-check" id="urlCheck"><i class="ri-checkbox-circle-line"></i> <span id="urlCheckMsg"></span></div>
-        </div>
-
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-organization-chart" style="color:var(--text3)"></i> Organisation Type</div>
-        <div class="card-grid two" id="orgTypeGrid">
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Solo Workspace"><div class="select-card-icon"><i class="ri-user-3-line"></i></div><div class="select-card-label">Solo Workspace</div></div>
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Small Team"><div class="select-card-icon"><i class="ri-team-line"></i></div><div class="select-card-label">Small Team (2–10)</div></div>
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Agency"><div class="select-card-icon"><i class="ri-briefcase-line"></i></div><div class="select-card-label">Agency</div></div>
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Newsroom"><div class="select-card-icon"><i class="ri-newspaper-line"></i></div><div class="select-card-label">Newsroom</div></div>
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Law Firm"><div class="select-card-icon"><i class="ri-scales-line"></i></div><div class="select-card-label">Law Firm</div></div>
-          <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Enterprise"><div class="select-card-icon"><i class="ri-building-4-line"></i></div><div class="select-card-label">Enterprise</div></div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
+          <button class="btn btn-primary" style="width:100%" id="step1Btn" onclick="goNext()" disabled><i
+              class="ri-arrow-right-line"></i> Create Account</button>
+          <div class="skip-link" style="margin-top:12px"><a href="app.html"><i class="ri-login-box-line"></i> Already
+              have an account? Sign in</a></div>
         </div>
       </div>
-    </div>
 
-    <!-- STEP 5: Profession Mode -->
-    <div class="step" id="step-5">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-focus-3-line"></i></div>
-        <div class="step-title">Choose your mode</div>
-        <div class="step-sub">Your workspace will be tailored to your profession. You can switch modes anytime.</div>
+      <!-- STEP 2: Email Verification -->
+      <div class="step" id="step-2">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-mail-send-line"></i></div>
+          <div class="step-title">Check your inbox</div>
+          <div class="step-sub">We sent a 6-digit code to <strong id="verifyEmail">your email</strong>. Enter it below.
+          </div>
 
-        <div class="mode-pick-card" onclick="selectMode(this)" data-mode="writer">
-          <div class="mode-pick-icon"><i class="ri-edit-2-line"></i></div>
-          <div style="flex:1">
-            <div class="mode-pick-title">Writer Mode</div>
-            <div class="mode-pick-desc">For individual creators and content teams</div>
-            <div class="mode-pick-feats">
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>Flexible templates & word count goals</div>
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>AI continue & improve</div>
+          <div class="otp-row">
+            <input class="otp-input" id="otp0" maxlength="1" inputmode="numeric" oninput="otpInput(0,this)"
+              onkeydown="otpKeydown(0,event)">
+            <input class="otp-input" id="otp1" maxlength="1" inputmode="numeric" oninput="otpInput(1,this)"
+              onkeydown="otpKeydown(1,event)">
+            <input class="otp-input" id="otp2" maxlength="1" inputmode="numeric" oninput="otpInput(2,this)"
+              onkeydown="otpKeydown(2,event)">
+            <input class="otp-input" id="otp3" maxlength="1" inputmode="numeric" oninput="otpInput(3,this)"
+              onkeydown="otpKeydown(3,event)">
+            <input class="otp-input" id="otp4" maxlength="1" inputmode="numeric" oninput="otpInput(4,this)"
+              onkeydown="otpKeydown(4,event)">
+            <input class="otp-input" id="otp5" maxlength="1" inputmode="numeric" oninput="otpInput(5,this)"
+              onkeydown="otpKeydown(5,event)">
+          </div>
+
+          <div class="resend-row">
+            Didn't receive it? <button class="resend-btn" id="resendBtn" onclick="resendCode()" disabled><i
+                class="ri-refresh-line"></i> Resend</button>
+            <span class="resend-timer" id="resendTimer">(60s)</span>
+          </div>
+
+          <div class="btn-row" style="margin-top:24px">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" id="step2Btn" onclick="goNext()" disabled><i class="ri-check-line"></i>
+              Verify Email</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: About You -->
+      <div class="step" id="step-3">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-hand-heart-line"></i></div>
+          <div class="step-title">Tell us about yourself</div>
+          <div class="step-sub">Help us tailor your Thread experience from day one.</div>
+
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-user-settings-line" style="color:var(--text3)"></i> Your Role</div>
+          <div class="card-grid" id="roleGrid">
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Writer">
+              <div class="select-card-icon"><i class="ri-edit-2-line"></i></div>
+              <div class="select-card-label">Writer</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Journalist">
+              <div class="select-card-icon"><i class="ri-newspaper-line"></i></div>
+              <div class="select-card-label">Journalist</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Legal Pro">
+              <div class="select-card-icon"><i class="ri-scales-line"></i></div>
+              <div class="select-card-label">Legal Pro</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Editor">
+              <div class="select-card-icon"><i class="ri-quill-pen-line"></i></div>
+              <div class="select-card-label">Editor</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Content Manager">
+              <div class="select-card-icon"><i class="ri-folder-user-line"></i></div>
+              <div class="select-card-label">Content Manager</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'role')" data-value="Other">
+              <div class="select-card-icon"><i class="ri-more-line"></i></div>
+              <div class="select-card-label">Other</div>
             </div>
           </div>
+
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-file-list-2-line" style="color:var(--text3)"></i> Primary Writing Types <span
+              style="font-weight:400;color:var(--text3)">(select all that apply)</span></div>
+          <div class="tags-row" id="typesTags">
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-article-line"></i>Articles & Blogs</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-newspaper-line"></i>News Stories</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-scales-line"></i>Legal Documents</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-film-line"></i>Scripts</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-megaphone-line"></i>Marketing Copy</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-code-s-slash-line"></i>Technical Writing</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-book-open-line"></i>Fiction</div>
+            <div class="tag" onclick="toggleTag(this)"><i class="ri-search-eye-line"></i>Research</div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
+          </div>
         </div>
-        <div class="mode-pick-card" onclick="selectMode(this)" data-mode="journalism">
-          <div class="mode-pick-icon"><i class="ri-newspaper-line"></i></div>
-          <div style="flex:1">
-            <div class="mode-pick-title">Journalism Mode</div>
-            <div class="mode-pick-desc">For reporters, editors, and newsrooms</div>
-            <div class="mode-pick-feats">
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>AP Style enforcement & headline generator</div>
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>Source tracking & deadline alerts</div>
+      </div>
+
+      <!-- STEP 4: Organisation Setup -->
+      <div class="step" id="step-4">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-building-2-line"></i></div>
+          <div class="step-title">Set up your workspace</div>
+          <div class="step-sub">Create your team's home on Thread. You can always change this later.</div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="ri-building-2-line"></i> Organisation Name</label>
+            <input type="text" class="form-input" id="orgName" placeholder="City Beat Newsroom"
+              oninput="updateSlug(this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="ri-link"></i> URL Slug</label>
+            <input type="text" class="form-input" id="orgSlug" placeholder="city-beat-newsroom"
+              oninput="checkSlug(this.value)">
+            <div class="url-preview"><i class="ri-global-line"></i> thread.so/<strong id="slugVal">your-org</strong>
+            </div>
+            <div class="url-check" id="urlCheck"><i class="ri-checkbox-circle-line"></i> <span id="urlCheckMsg"></span>
             </div>
           </div>
-        </div>
-        <div class="mode-pick-card" onclick="selectMode(this)" data-mode="legal">
-          <div class="mode-pick-icon"><i class="ri-scales-line"></i></div>
-          <div style="flex:1">
-            <div class="mode-pick-title">Legal Mode</div>
-            <div class="mode-pick-desc">For attorneys, paralegals, and legal teams</div>
-            <div class="mode-pick-feats">
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>Always-on track changes & clause review</div>
-              <div class="mode-pick-feat"><i class="ri-check-line"></i>Bluebook citations</div>
+
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-organization-chart" style="color:var(--text3)"></i> Organisation Type</div>
+          <div class="card-grid two" id="orgTypeGrid">
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Solo Workspace">
+              <div class="select-card-icon"><i class="ri-user-3-line"></i></div>
+              <div class="select-card-label">Solo Workspace</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Small Team">
+              <div class="select-card-icon"><i class="ri-team-line"></i></div>
+              <div class="select-card-label">Small Team (2–10)</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Agency">
+              <div class="select-card-icon"><i class="ri-briefcase-line"></i></div>
+              <div class="select-card-label">Agency</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Newsroom">
+              <div class="select-card-icon"><i class="ri-newspaper-line"></i></div>
+              <div class="select-card-label">Newsroom</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Law Firm">
+              <div class="select-card-icon"><i class="ri-scales-line"></i></div>
+              <div class="select-card-label">Law Firm</div>
+            </div>
+            <div class="select-card" onclick="selectCard(this,'orgtype')" data-value="Enterprise">
+              <div class="select-card-icon"><i class="ri-building-4-line"></i></div>
+              <div class="select-card-label">Enterprise</div>
             </div>
           </div>
-        </div>
 
-        <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" id="step5Btn" onclick="goNext()" disabled><i class="ri-arrow-right-line"></i> Continue</button>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- STEP 6: Workspace Preferences -->
-    <div class="step" id="step-6">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-palette-line"></i></div>
-        <div class="step-title">Customise your workspace</div>
-        <div class="step-sub">Set your preferences — you can change these anytime in Settings.</div>
+      <!-- STEP 5: Profession Mode -->
+      <div class="step" id="step-5">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-focus-3-line"></i></div>
+          <div class="step-title">Choose your mode</div>
+          <div class="step-sub">Your workspace will be tailored to your profession. You can switch modes anytime.</div>
 
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-contrast-2-line" style="color:var(--text3)"></i> Theme</div>
-        <div class="theme-cards">
-          <div class="theme-card selected" onclick="selectThemePref(this,'light')" id="themeCardLight">
-            <div class="theme-preview-light"><div class="theme-preview-line"></div><div class="theme-preview-line2"></div></div>
-            <div class="theme-label"><i class="ri-sun-line"></i> Light</div>
+          <div class="mode-pick-card" onclick="selectMode(this)" data-mode="writer">
+            <div class="mode-pick-icon"><i class="ri-edit-2-line"></i></div>
+            <div style="flex:1">
+              <div class="mode-pick-title">Writer Mode</div>
+              <div class="mode-pick-desc">For individual creators and content teams</div>
+              <div class="mode-pick-feats">
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>Flexible templates & word count goals</div>
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>AI continue & improve</div>
+              </div>
+            </div>
           </div>
-          <div class="theme-card" onclick="selectThemePref(this,'dark')" id="themeCardDark">
-            <div class="theme-preview-dark"><div class="theme-preview-line"></div><div class="theme-preview-line2"></div></div>
-            <div class="theme-label"><i class="ri-moon-line"></i> Dark</div>
+          <div class="mode-pick-card" onclick="selectMode(this)" data-mode="journalism">
+            <div class="mode-pick-icon"><i class="ri-newspaper-line"></i></div>
+            <div style="flex:1">
+              <div class="mode-pick-title">Journalism Mode</div>
+              <div class="mode-pick-desc">For reporters, editors, and newsrooms</div>
+              <div class="mode-pick-feats">
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>AP Style enforcement & headline generator</div>
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>Source tracking & deadline alerts</div>
+              </div>
+            </div>
           </div>
-          <div class="theme-card" onclick="selectThemePref(this,'system')" id="themeCardSystem">
-            <div class="theme-preview-sys"><i class="ri-computer-line" style="font-size:22px;color:var(--text3)"></i></div>
-            <div class="theme-label"><i class="ri-settings-3-line"></i> System</div>
+          <div class="mode-pick-card" onclick="selectMode(this)" data-mode="legal">
+            <div class="mode-pick-icon"><i class="ri-scales-line"></i></div>
+            <div style="flex:1">
+              <div class="mode-pick-title">Legal Mode</div>
+              <div class="mode-pick-desc">For attorneys, paralegals, and legal teams</div>
+              <div class="mode-pick-feats">
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>Always-on track changes & clause review</div>
+                <div class="mode-pick-feat"><i class="ri-check-line"></i>Bluebook citations</div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-text" style="color:var(--text3)"></i> Default Document Font</div>
-        <div id="fontOpts">
-          <div class="font-opt selected" onclick="selectFont(this)" data-font="Fraunces">
-            <div class="font-opt-name">Fraunces (Serif)</div>
-            <div class="font-opt-preview" style="font-family:'Fraunces',Georgia,serif">The quick brown fox jumps over the lazy dog</div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" id="step5Btn" onclick="goNext()" disabled><i
+                class="ri-arrow-right-line"></i> Continue</button>
           </div>
-          <div class="font-opt" onclick="selectFont(this)" data-font="DM Sans">
-            <div class="font-opt-name">DM Sans (Sans-serif)</div>
-            <div class="font-opt-preview" style="font-family:'DM Sans',sans-serif">The quick brown fox jumps over the lazy dog</div>
-          </div>
-          <div class="font-opt" onclick="selectFont(this)" data-font="Georgia">
-            <div class="font-opt-name">Georgia (Classic Serif)</div>
-            <div class="font-opt-preview" style="font-family:Georgia,serif">The quick brown fox jumps over the lazy dog</div>
-          </div>
-        </div>
-
-        <div style="margin-top:20px">
-          <div class="pref-row">
-            <div class="pref-label"><i class="ri-sparkling-2-line"></i><div><div class="pref-label-text">AI Writing Assistant</div><div class="pref-label-sub">Inline AI commands in the editor</div></div></div>
-            <div class="pill-toggle on" id="aiToggle" onclick="togglePill(this)"><div class="pill-thumb"></div></div>
-          </div>
-          <div class="pref-row">
-            <div class="pref-label"><i class="ri-mail-line"></i><div><div class="pref-label-text">Email Notifications</div><div class="pref-label-sub">Approvals, comments, and digest</div></div></div>
-            <div class="pill-toggle on" id="notifToggle" onclick="togglePill(this)"><div class="pill-thumb"></div></div>
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
         </div>
       </div>
-    </div>
 
-    <!-- STEP 7: Invite Team -->
-    <div class="step" id="step-7">
-      <div class="step-inner">
-        <div class="step-icon-wrap"><i class="ri-team-line"></i></div>
-        <div class="step-title">Invite your team</div>
-        <div class="step-sub">Add teammates now or skip and invite them later from your workspace settings.</div>
+      <!-- STEP 6: Workspace Preferences -->
+      <div class="step" id="step-6">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-palette-line"></i></div>
+          <div class="step-title">Customise your workspace</div>
+          <div class="step-sub">Set your preferences — you can change these anytime in Settings.</div>
 
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:5px"><i class="ri-mail-send-line" style="color:var(--text3)"></i> Invite by email</div>
-        <div class="invite-chips" id="inviteChips" onclick="document.getElementById('inviteInput').focus()">
-          <input type="text" class="invite-text-input" id="inviteInput" placeholder="priya@newsroom.co, Enter to add" onkeydown="handleInviteKey(event)">
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-contrast-2-line" style="color:var(--text3)"></i> Theme</div>
+          <div class="theme-cards">
+            <div class="theme-card selected" onclick="selectThemePref(this,'light')" id="themeCardLight">
+              <div class="theme-preview-light">
+                <div class="theme-preview-line"></div>
+                <div class="theme-preview-line2"></div>
+              </div>
+              <div class="theme-label"><i class="ri-sun-line"></i> Light</div>
+            </div>
+            <div class="theme-card" onclick="selectThemePref(this,'dark')" id="themeCardDark">
+              <div class="theme-preview-dark">
+                <div class="theme-preview-line"></div>
+                <div class="theme-preview-line2"></div>
+              </div>
+              <div class="theme-label"><i class="ri-moon-line"></i> Dark</div>
+            </div>
+            <div class="theme-card" onclick="selectThemePref(this,'system')" id="themeCardSystem">
+              <div class="theme-preview-sys"><i class="ri-computer-line" style="font-size:22px;color:var(--text3)"></i>
+              </div>
+              <div class="theme-label"><i class="ri-settings-3-line"></i> System</div>
+            </div>
+          </div>
+
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-text" style="color:var(--text3)"></i> Default Document Font</div>
+          <div id="fontOpts">
+            <div class="font-opt selected" onclick="selectFont(this)" data-font="Fraunces">
+              <div class="font-opt-name">Fraunces (Serif)</div>
+              <div class="font-opt-preview" style="font-family:'Fraunces',Georgia,serif">The quick brown fox jumps over
+                the lazy dog</div>
+            </div>
+            <div class="font-opt" onclick="selectFont(this)" data-font="DM Sans">
+              <div class="font-opt-name">DM Sans (Sans-serif)</div>
+              <div class="font-opt-preview" style="font-family:'DM Sans',sans-serif">The quick brown fox jumps over the
+                lazy dog</div>
+            </div>
+            <div class="font-opt" onclick="selectFont(this)" data-font="Georgia">
+              <div class="font-opt-name">Georgia (Classic Serif)</div>
+              <div class="font-opt-preview" style="font-family:Georgia,serif">The quick brown fox jumps over the lazy
+                dog</div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px">
+            <div class="pref-row">
+              <div class="pref-label"><i class="ri-sparkling-2-line"></i>
+                <div>
+                  <div class="pref-label-text">AI Writing Assistant</div>
+                  <div class="pref-label-sub">Inline AI commands in the editor</div>
+                </div>
+              </div>
+              <div class="pill-toggle on" id="aiToggle" onclick="togglePill(this)">
+                <div class="pill-thumb"></div>
+              </div>
+            </div>
+            <div class="pref-row">
+              <div class="pref-label"><i class="ri-mail-line"></i>
+                <div>
+                  <div class="pref-label-text">Email Notifications</div>
+                  <div class="pref-label-sub">Approvals, comments, and digest</div>
+                </div>
+              </div>
+              <div class="pill-toggle on" id="notifToggle" onclick="togglePill(this)">
+                <div class="pill-thumb"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" onclick="goNext()"><i class="ri-arrow-right-line"></i> Continue</button>
+          </div>
         </div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:5px"><i class="ri-information-line"></i> Press Enter or comma to add each email address</div>
-
-        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px"><i class="ri-user-settings-line" style="color:var(--text3)"></i> Default role for invitees</div>
-        <div class="role-cards" id="inviteRoleCards">
-          <div class="role-card" onclick="selectInviteRole(this)" data-role="Viewer"><i class="ri-eye-line"></i><div class="role-card-name">Viewer</div></div>
-          <div class="role-card selected" onclick="selectInviteRole(this)" data-role="Writer"><i class="ri-edit-2-line"></i><div class="role-card-name">Writer</div></div>
-          <div class="role-card" onclick="selectInviteRole(this)" data-role="Editor"><i class="ri-user-settings-line"></i><div class="role-card-name">Editor</div></div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border-radius:12px;margin-bottom:20px">
-          <i class="ri-link" style="font-size:18px;color:var(--text3)"></i>
-          <span style="font-size:13px;color:var(--text2);flex:1">Or share a team invite link</span>
-          <button class="btn" style="padding:6px 14px;font-size:13px;border:1.5px solid var(--border);background:var(--card);color:var(--text2)" id="copyLinkBtn" onclick="copyLink(this)"><i class="ri-clipboard-line"></i> Copy link</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
-          <button class="btn btn-primary" id="launchBtn" onclick="launchWorkspace()" style="background:linear-gradient(135deg,var(--peach),var(--blush))"><i class="ri-rocket-line"></i> Launch my workspace</button>
-        </div>
-        <div class="skip-link"><a onclick="launchWorkspace()"><i class="ri-skip-forward-line"></i> Skip for now — invite teammates later</a></div>
       </div>
-    </div>
 
-  </div><!-- /steps-wrapper -->
-</div><!-- /shell -->
+      <!-- STEP 7: Invite Team -->
+      <div class="step" id="step-7">
+        <div class="step-inner">
+          <div class="step-icon-wrap"><i class="ri-team-line"></i></div>
+          <div class="step-title">Invite your team</div>
+          <div class="step-sub">Add teammates now or skip and invite them later from your workspace settings.</div>
 
-<script>
-// ── THEME ────────────────────────────────────────────────────────
-const LS_THEME = 'thread_theme';
-function getTheme(){ return localStorage.getItem(LS_THEME) || 'light'; }
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem(LS_THEME, t);
-  document.getElementById('themeIcon').className = t === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
-}
-applyTheme(getTheme());
-document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+            <i class="ri-mail-send-line" style="color:var(--text3)"></i> Invite by email</div>
+          <div class="invite-chips" id="inviteChips" onclick="document.getElementById('inviteInput').focus()">
+            <input type="text" class="invite-text-input" id="inviteInput" placeholder="priya@newsroom.co, Enter to add"
+              onkeydown="handleInviteKey(event)">
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:5px"><i
+              class="ri-information-line"></i> Press Enter or comma to add each email address</div>
 
-// ── ONBOARDING STATE ─────────────────────────────────────────────
-const OB_KEY = 'thread_onboarding';
-let obData = JSON.parse(localStorage.getItem(OB_KEY) || '{}');
-let currentStep = obData.currentStep || 1;
-const TOTAL_STEPS = 7;
-const STEP_LABELS = [
-  'Create your account',
-  'Verify your email',
-  'About yourself',
-  'Set up your workspace',
-  'Choose your mode',
-  'Customise workspace',
-  'Invite your team',
-];
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+            <i class="ri-user-settings-line" style="color:var(--text3)"></i> Default role for invitees</div>
+          <div class="role-cards" id="inviteRoleCards">
+            <div class="role-card" onclick="selectInviteRole(this)" data-role="Viewer"><i class="ri-eye-line"></i>
+              <div class="role-card-name">Viewer</div>
+            </div>
+            <div class="role-card selected" onclick="selectInviteRole(this)" data-role="Writer"><i
+                class="ri-edit-2-line"></i>
+              <div class="role-card-name">Writer</div>
+            </div>
+            <div class="role-card" onclick="selectInviteRole(this)" data-role="Editor"><i
+                class="ri-user-settings-line"></i>
+              <div class="role-card-name">Editor</div>
+            </div>
+          </div>
 
-function saveOb(){
-  obData.currentStep = currentStep;
-  localStorage.setItem(OB_KEY, JSON.stringify(obData));
-}
+          <div
+            style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border-radius:12px;margin-bottom:20px">
+            <i class="ri-link" style="font-size:18px;color:var(--text3)"></i>
+            <span style="font-size:13px;color:var(--text2);flex:1">Or share a team invite link</span>
+            <button class="btn"
+              style="padding:6px 14px;font-size:13px;border:1.5px solid var(--border);background:var(--card);color:var(--text2)"
+              id="copyLinkBtn" onclick="copyLink(this)"><i class="ri-clipboard-line"></i> Copy link</button>
+          </div>
 
-// ── PROGRESS ─────────────────────────────────────────────────────
-function buildProgress(){
-  const container = document.getElementById('progressSteps');
-  container.innerHTML = '';
-  for(let i = 1; i <= TOTAL_STEPS; i++){
-    if(i > 1){
-      const line = document.createElement('div');
-      line.className = 'progress-line' + (i <= currentStep ? ' done' : '');
-      container.appendChild(line);
-    }
-    const dot = document.createElement('div');
-    dot.className = 'progress-step ' + (i < currentStep ? 'done' : i === currentStep ? 'active' : 'todo');
-    if(i < currentStep){
-      dot.innerHTML = '<i class="ri-check-line"></i>';
-      dot.onclick = () => goToStep(i);
-      dot.title = STEP_LABELS[i-1];
-    } else {
-      dot.textContent = i;
-    }
-    container.appendChild(dot);
-  }
-  document.getElementById('progressLabel').innerHTML = `Step <span>${currentStep}</span> of ${TOTAL_STEPS} — ${STEP_LABELS[currentStep-1]}`;
-}
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="goPrev()"><i class="ri-arrow-left-line"></i> Back</button>
+            <button class="btn btn-primary" id="launchBtn" onclick="launchWorkspace()"
+              style="background:linear-gradient(135deg,var(--peach),var(--blush))"><i class="ri-rocket-line"></i> Launch
+              my workspace</button>
+          </div>
+          <div class="skip-link"><a onclick="launchWorkspace()"><i class="ri-skip-forward-line"></i> Skip for now —
+              invite teammates later</a></div>
+        </div>
+      </div>
 
-function goToStep(n){
-  document.getElementById('step-' + currentStep).classList.remove('active');
-  currentStep = n;
-  document.getElementById('step-' + currentStep).classList.add('active');
-  buildProgress();
-  saveOb();
-  if(currentStep === 2) startResendTimer();
-  // Restore saved data into fields
-  restoreStep(currentStep);
-}
+    </div><!-- /steps-wrapper -->
+  </div><!-- /shell -->
 
-function goNext(){ if(currentStep < TOTAL_STEPS) goToStep(currentStep + 1); }
-function goPrev(){ if(currentStep > 1) goToStep(currentStep - 1); }
-
-buildProgress();
-restoreStep(1);
-
-// ── RESTORE FIELDS ───────────────────────────────────────────────
-function restoreStep(s){
-  if(s === 1){
-    if(obData.name) document.getElementById('fullName').value = obData.name;
-    if(obData.email){ document.getElementById('emailField').value = obData.email; document.getElementById('verifyEmail').textContent = obData.email; }
-    validateStep1();
-  }
-  if(s === 4){
-    if(obData.orgName) document.getElementById('orgName').value = obData.orgName;
-    if(obData.orgSlug){ document.getElementById('orgSlug').value = obData.orgSlug; document.getElementById('slugVal').textContent = obData.orgSlug; }
-    if(obData.orgType){ document.querySelectorAll('#orgTypeGrid .select-card').forEach(c => { if(c.dataset.value === obData.orgType) c.classList.add('selected'); }); }
-  }
-  if(s === 5 && obData.mode){
-    document.querySelectorAll('.mode-pick-card').forEach(c => {
-      c.classList.toggle('selected', c.dataset.mode === obData.mode);
-      const chk = c.querySelector('.mode-pick-check'); if(chk) chk.remove();
-      if(c.dataset.mode === obData.mode){ const ico = document.createElement('i'); ico.className = 'ri-check-circle-fill mode-pick-check'; c.appendChild(ico); }
-    });
-    document.getElementById('step5Btn').disabled = false;
-  }
-  if(s === 3 && obData.role){
-    document.querySelectorAll('#roleGrid .select-card').forEach(c => { if(c.dataset.value === obData.role) c.classList.add('selected'); });
-  }
-}
-
-// ── STEP 1 ───────────────────────────────────────────────────────
-function validateStep1(){
-  const name = document.getElementById('fullName').value.trim();
-  const email = document.getElementById('emailField').value.trim();
-  const pw = document.getElementById('pwField').value;
-  const valid = name.length > 1 && email.includes('@') && pw.length >= 8;
-  document.getElementById('step1Btn').disabled = !valid;
-  if(name) obData.name = name;
-  if(email){ obData.email = email; document.getElementById('verifyEmail').textContent = email; }
-  saveOb();
-}
-
-function checkPassword(val){
-  const bar = document.getElementById('pwBar');
-  const hint = document.getElementById('pwHint');
-  const levels = [
-    { min:0, w:'0%', bg:'', msg:'Enter a strong password', icon:'ri-information-line' },
-    { min:1, w:'20%', bg:'#EF4444', msg:'Very weak', icon:'ri-error-warning-line' },
-    { min:6, w:'40%', bg:'#F97316', msg:'Weak', icon:'ri-alert-line' },
-    { min:8, w:'60%', bg:'#F5C842', msg:'Fair', icon:'ri-checkbox-blank-circle-line' },
-    { min:10, w:'80%', bg:'#10B981', msg:'Strong', icon:'ri-checkbox-circle-line' },
-    { min:14, w:'100%', bg:'#059669', msg:'Very strong', icon:'ri-shield-check-line' },
-  ];
-  let level = levels[0];
-  for(const l of levels){ if(val.length >= l.min) level = l; }
-  bar.style.width = level.w; bar.style.background = level.bg;
-  hint.innerHTML = `<i class="${level.icon}" style="color:${level.bg||'var(--text3)'}"></i> ${level.msg}`;
-  hint.style.color = level.bg || 'var(--text3)';
-  validateStep1();
-}
-
-function socialLogin(provider){
-  obData.name = provider === 'Google' ? 'Priya Sharma' : 'dev_user';
-  obData.email = provider === 'Google' ? 'priya@newsroom.co' : 'dev@github.com';
-  saveOb();
-  goNext();
-  startResendTimer();
-  document.getElementById('verifyEmail').textContent = obData.email;
-}
-
-// ── STEP 2 (OTP) ─────────────────────────────────────────────────
-function otpInput(idx, input){
-  input.classList.toggle('filled', input.value !== '');
-  if(input.value && idx < 5) document.getElementById('otp' + (idx+1)).focus();
-  const all = Array.from({length:6}, (_,i) => document.getElementById('otp'+i).value).every(v => v);
-  document.getElementById('step2Btn').disabled = !all;
-  if(all){ obData.emailVerified = true; saveOb(); }
-}
-function otpKeydown(idx, e){
-  if(e.key === 'Backspace' && !e.target.value && idx > 0){
-    document.getElementById('otp'+(idx-1)).value = '';
-    document.getElementById('otp'+(idx-1)).classList.remove('filled');
-    document.getElementById('otp'+(idx-1)).focus();
-  }
-}
-
-let resendInterval;
-function startResendTimer(){
-  clearInterval(resendInterval);
-  let secs = 60;
-  const btn = document.getElementById('resendBtn');
-  const timer = document.getElementById('resendTimer');
-  btn.disabled = true; timer.textContent = '(60s)';
-  resendInterval = setInterval(() => {
-    secs--;
-    timer.textContent = secs > 0 ? `(${secs}s)` : '';
-    if(secs <= 0){ clearInterval(resendInterval); btn.disabled = false; }
-  }, 1000);
-}
-setTimeout(startResendTimer, 200);
-
-function resendCode(){
-  document.getElementById('resendBtn').disabled = true;
-  startResendTimer();
-}
-
-// ── CARD SELECT ──────────────────────────────────────────────────
-function selectCard(el, group){
-  el.closest('.card-grid').querySelectorAll('.select-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  if(group === 'role'){ obData.role = el.dataset.value; }
-  if(group === 'orgtype'){ obData.orgType = el.dataset.value; }
-  saveOb();
-}
-
-// ── TAG TOGGLE ───────────────────────────────────────────────────
-function toggleTag(el){
-  el.classList.toggle('selected');
-  const types = Array.from(document.querySelectorAll('#typesTags .tag.selected')).map(t => t.textContent.trim());
-  obData.writingTypes = types;
-  saveOb();
-}
-
-// ── SLUG ────────────────────────────────────────────────────────
-let slugTimeout;
-function updateSlug(val){
-  const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g,'') || 'your-org';
-  document.getElementById('slugVal').textContent = slug;
-  document.getElementById('orgSlug').value = slug;
-  obData.orgName = val; obData.orgSlug = slug;
-  saveOb();
-  checkSlug(slug);
-}
-
-function checkSlug(val){
-  const check = document.getElementById('urlCheck');
-  const msg = document.getElementById('urlCheckMsg');
-  if(!val){ check.style.display = 'none'; return; }
-  check.style.display = 'flex';
-  check.className = 'url-check';
-  check.querySelector('i').className = 'ri-loader-4-line';
-  msg.textContent = 'Checking…';
-  clearTimeout(slugTimeout);
-  slugTimeout = setTimeout(() => {
-    const taken = ['newsroom','media','legal','writers','thread','admin'];
-    const ok = !taken.includes(val.toLowerCase());
-    check.className = 'url-check ' + (ok ? 'ok' : 'err');
-    check.querySelector('i').className = ok ? 'ri-checkbox-circle-line' : 'ri-close-circle-line';
-    msg.textContent = ok ? 'Available' : 'Already taken';
-    obData.orgSlug = ok ? val : ''; saveOb();
-    document.getElementById('slugVal').textContent = val || 'your-org';
-  }, 500);
-}
-
-// ── MODE SELECT ──────────────────────────────────────────────────
-function selectMode(el){
-  document.querySelectorAll('.mode-pick-card').forEach(c => {
-    c.classList.remove('selected');
-    const chk = c.querySelector('.mode-pick-check'); if(chk) chk.remove();
-  });
-  el.classList.add('selected');
-  const ico = document.createElement('i');
-  ico.className = 'ri-check-circle-fill mode-pick-check';
-  ico.style.cssText = 'margin-left:auto;flex-shrink:0;color:var(--peach);font-size:22px';
-  el.appendChild(ico);
-  obData.mode = el.dataset.mode;
-  saveOb();
-  document.getElementById('step5Btn').disabled = false;
-}
-
-// ── THEME PREF ───────────────────────────────────────────────────
-function selectThemePref(el, pref){
-  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  obData.theme = pref;
-  saveOb();
-  if(pref !== 'system') applyTheme(pref);
-}
-
-// ── FONT ────────────────────────────────────────────────────────
-function selectFont(el){
-  document.querySelectorAll('.font-opt').forEach(f => f.classList.remove('selected'));
-  el.classList.add('selected');
-  obData.font = el.dataset.font;
-  saveOb();
-}
-
-// ── TOGGLE PILL ──────────────────────────────────────────────────
-function togglePill(el){
-  el.classList.toggle('on');
-  const id = el.id;
-  if(id === 'aiToggle') obData.aiEnabled = el.classList.contains('on');
-  if(id === 'notifToggle') obData.emailNotifs = el.classList.contains('on');
-  saveOb();
-}
-
-// ── INVITE CHIPS ─────────────────────────────────────────────────
-const inviteEmails = obData.inviteEmails || [];
-function handleInviteKey(e){
-  const input = document.getElementById('inviteInput');
-  if((e.key === 'Enter' || e.key === ',') && input.value.trim()){
-    e.preventDefault();
-    const email = input.value.trim().replace(/,/g,'');
-    if(email.includes('@') && !inviteEmails.includes(email)){
-      inviteEmails.push(email);
-      obData.inviteEmails = inviteEmails; saveOb();
-      const chip = document.createElement('div');
-      chip.className = 'invite-chip';
-      chip.dataset.email = email;
-      chip.innerHTML = `<i class="ri-mail-line" style="font-size:12px"></i><span>${email}</span><span class="invite-chip-remove" onclick="removeChip(this,'${email}')">×</span>`;
-      document.getElementById('inviteChips').insertBefore(chip, input);
-    }
-    input.value = '';
-  }
-}
-function removeChip(el, email){
-  inviteEmails.splice(inviteEmails.indexOf(email), 1);
-  obData.inviteEmails = inviteEmails; saveOb();
-  el.parentElement.remove();
-}
-
-function selectInviteRole(el){
-  document.querySelectorAll('#inviteRoleCards .role-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  obData.inviteRole = el.dataset.role; saveOb();
-}
-
-function copyLink(btn){
-  const link = `https://thread.so/invite/${obData.orgSlug || 'org'}?token=abc123`;
-  navigator.clipboard.writeText(link).catch(() => {});
-  btn.innerHTML = '<i class="ri-check-line"></i> Copied!';
-  btn.style.color = 'var(--mint)';
-  setTimeout(() => { btn.innerHTML = '<i class="ri-clipboard-line"></i> Copy link'; btn.style.color = ''; }, 2000);
-}
-
-// ── LAUNCH ──────────────────────────────────────────────────────
-function launchWorkspace(){
-  // Build final user object from onboarding data
-  const user = {
-    name: obData.name || 'New User',
-    email: obData.email || '',
-    initials: (obData.name || 'NU').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(),
-    org: obData.orgName || 'My Workspace',
-    orgSlug: obData.orgSlug || 'my-workspace',
-    plan: obData.orgType === 'Solo Workspace' ? 'Solo' : 'Team',
-    mode: obData.mode || 'writer',
-    theme: obData.theme || 'light',
-    font: obData.font || 'Fraunces',
-    aiEnabled: obData.aiEnabled !== false,
-    emailNotifs: obData.emailNotifs !== false,
-    role: obData.role || 'Writer',
-    onboarded: true,
-  };
-  localStorage.setItem('thread_user', JSON.stringify(user));
-  localStorage.setItem('thread_onboarded', '1');
-  if(obData.theme && obData.theme !== 'system') localStorage.setItem('thread_theme', obData.theme);
-
-  // Animate launch button
-  const btn = document.getElementById('launchBtn');
-  btn.innerHTML = '<i class="ri-loader-4-line" style="animation:spin 1s linear infinite"></i> Setting up…';
-  btn.disabled = true;
-  document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
-  setTimeout(() => { window.location.href = 'app.html'; }, 1400);
-}
-
-// Restore invite emails from storage
-if(obData.inviteEmails && obData.inviteEmails.length){
-  obData.inviteEmails.forEach(email => {
-    const chip = document.createElement('div');
-    chip.className = 'invite-chip'; chip.dataset.email = email;
-    chip.innerHTML = `<i class="ri-mail-line" style="font-size:12px"></i><span>${email}</span><span class="invite-chip-remove" onclick="removeChip(this,'${email}')">×</span>`;
-    document.getElementById('inviteChips').insertBefore(chip, document.getElementById('inviteInput'));
-    if(!inviteEmails.includes(email)) inviteEmails.push(email);
-  });
-}
-</script>
+  <script src="js/onboarding.js"></script>
 </body>
+
 </html>
