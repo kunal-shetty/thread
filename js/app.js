@@ -764,10 +764,19 @@ function switchView(view) {
 function bindDashboard() {
   $('#btn-new-doc').on('click', openNewDocModal);
   $('#btn-goto-queue').on('click', () => switchView('queue'));
-  $('#btn-new-folder').on('click', () => toast('info', 'Folders coming soon!', 'ri-folder-add-line'));
+  $('#btn-new-folder').on('click', () => {
+    const fn = prompt('Enter folder name:');
+    if(fn) {
+      $('#ws-folders').append(`<div class="sidebar-doc-item"><div class="sdot" style="background:var(--lemon)"></div><div class="sname">${fn}</div></div>`);
+      toast('success', `Folder "${fn}" created`);
+    }
+  });
   $('#btn-view-all-docs').on('click', openAllDocsModal);
   $('#btn-new-article').on('click', openNewArticleModal);
-  $('#btn-search-kb').on('click', () => toast('info', 'KB Search coming soon!', 'ri-search-line'));
+  $('#btn-search-kb').on('click', () => {
+    openCommandPalette();
+    $('#cmd-input').val('Search KB: ').focus();
+  });
 }
 
 function openAllDocsModal() {
@@ -1768,7 +1777,7 @@ function renderCalendarView() {
         <div class="cal-grid">${calGrid}</div>
         <div class="section-bar">
           <div class="section-bar-title"><i class="ri-send-plane-line"></i> Publish Schedule</div>
-          <button class="btn btn-sm btn-ghost" onclick="toast('info','Full schedule coming soon!','ri-calendar-line')">View all <i class="ri-arrow-right-line"></i></button>
+          <button class="btn btn-sm btn-ghost" onclick="switchView('calendar')">View all <i class="ri-arrow-right-line"></i></button>
         </div>
         ${publishSchedule.length ? publishSchedule.map(p => `
           <div class="pq-row">
@@ -1786,7 +1795,9 @@ function renderCalendarView() {
           </div>`).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No deadlines set yet.</div>'}`);
 
   $('#cal-prev,#cal-next,#btn-cal-today').on('click', function () { toast('info', 'Calendar navigation', 'ri-calendar-2-line'); });
-  $('#btn-new-event').on('click', () => toast('info', 'New event coming soon!', 'ri-add-line'));
+  $('#btn-new-event').on('click', () => {
+    toast('success', 'Event scheduling opened (Demo)', 'ri-calendar-event-line');
+  });
 }
 
 // ─── TEAMS VIEW ───
@@ -1845,7 +1856,10 @@ function renderTeamsView() {
           <button class="btn btn-ghost flex-1" style="justify-content:center" id="btn-new-team2"><i class="ri-add-line"></i> New Team</button>
         </div>`);
   $('#btn-invite-member,#btn-invite-member2').on('click', openInviteModal);
-  $('#btn-new-team,#btn-new-team2').on('click', () => toast('info', 'Team creation coming soon!', 'ri-team-line'));
+  $('#btn-new-team,#btn-new-team2').on('click', () => {
+    const tn = prompt('Enter new team name:');
+    if(tn) toast('success', `Team "${tn}" created (Demo)`);
+  });
 }
 
 // ─── INTELLIGENCE / VALIDATION PANEL ───
@@ -1914,10 +1928,17 @@ CMD_ITEMS.push(
 );
 
 // Init mode and role on load
-setTimeout(() => {
-  applyMode(STATE.user.mode || 'journalism');
-  applyRole('lead');
-  injectModeWidgetArea();
-  renderIntelPanel();
-}, 80);
+const savedMode = LS.get('user', {}).mode;
+if (savedMode) switchProfessionMode(savedMode);
+switchRole('Lead Editor');
 
+if (STATE.onboarded) {
+  setTimeout(() => {
+    $('#splash').remove();
+    launchApp();
+  }, 300);
+} else {
+  initOnboarding();
+}
+injectModeWidgetArea();
+renderIntelPanel();

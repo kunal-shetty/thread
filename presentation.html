@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thread Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    /* Reset & Base Variables */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1A1A2E;
+      --text: #F9FAFB;
+      --text-muted: #9CA3AF;
+      --accent: #F4845F;
+      --accent-light: #FFDAB9;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 700; margin-bottom: 20px; }
+
+    /* Presentation Container */
+    .presentation-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      padding: 60px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transform: translateX(50px) scale(0.95);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    .slide.previous {
+      opacity: 0;
+      transform: translateX(-50px) scale(0.95);
+      z-index: 1;
+    }
+
+    /* Layout Patterns */
+    .split-slide { display: flex; gap: 60px; height: 100%; align-items: center; justify-content: space-between; flex-direction: row; }
+    .split-slide > div { flex: 1; }
+    .center-slide { text-align: center; max-width: 900px; margin: 0 auto; }
+    
+    .slide-number {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* Specific Elements */
+    .badge {
+      display: inline-block;
+      background: rgba(244, 132, 95, 0.15);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+    }
+
+    .title { font-size: 56px; line-height: 1.1; margin-bottom: 24px; }
+    .title span { color: var(--accent); }
+    .subtitle { font-size: 24px; color: var(--text-muted); line-height: 1.5; font-weight: 400; margin-bottom: 30px; }
+    .body-text { font-size: 20px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+
+    .image-container {
+      width: 100%;
+      height: 450px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px;
+    }
+    
+    .card i { font-size: 32px; color: var(--accent); margin-bottom: 15px; display: block; }
+    .card h3 { font-size: 20px; margin-bottom: 10px; font-family: 'DM Sans', sans-serif;}
+    .card p { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Controls */
+    .controls {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+    .ctrl-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: white;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+    .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    /* Flow diagram */
+    .flow-steps { display: flex; align-items: center; justify-content: space-between; margin-top: 40px; }
+    .flow-step { text-align: center; flex: 1; position: relative; }
+    .flow-step::after {
+      content: '→'; position: absolute; right: -10px; top: 20px; color: var(--border); font-size: 24px;
+    }
+    .flow-step:last-child::after { display: none; }
+    .fs-icon { width: 60px; height: 60px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; color: var(--accent); }
+    .fs-title { font-weight: 600; margin-bottom: 5px; font-size: 16px; }
+    .fs-desc { font-size: 13px; color: var(--text-muted); }
+
+  </style>
+</head>
+<body>
+
+  <div class="presentation-container" id="presentation">
+    
+    <!-- SLIDE 1: Title -->
+    <div class="slide active">
+      <div class="center-slide">
+        <div style="margin-bottom: 40px;">
+          <img src="assets/favicon.png" alt="Thread Logo" style="width: 80px; height: 80px; object-fit: contain;">
+        </div>
+        <h1 class="title">Thread<br><span>Every word connected.</span></h1>
+        <p class="subtitle">An intelligent, profession-aware collaborative workspace for knowledge-driven teams.</p>
+        <p class="body-text" style="font-size: 16px; color: var(--text-muted);">Hackathon UI/UX Prototype</p>
+      </div>
+      <div class="slide-number">01</div>
+    </div>
+
+    <!-- SLIDE 2: The Idea -->
+    <div class="slide">
+      <div class="split-slide">
+        <div>
+          <span class="badge">1. The Idea</span>
+          <h2 class="title">Rethinking the<br>Workspace</h2>
+          <p class="body-text"><strong>What it is:</strong> A web-based SaaS platform that unifies structured knowledge, collaborative drafting, validation systems, and workflow management.</p>
+          <div class="grid-2">
+            <div class="card" style="padding: 20px;">
+              <i class="ri-user-search-line"></i>
+              <h3>Who it's for</h3>
+              <p>Journalists, legal professionals, and content writers operating in complex environments.</p>
+            </div>
+            <div class="card" style="padding: 20px;">
+              <i class="ri-rocket-line"></i>
+              <h3>Why it matters</h3>
+              <p>Current tools are disconnected. Thread provides contextual awareness, continuity, and role sensitivity.</p>
+            </div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="assets/screenshot1.png" alt="Dashboard Overview" id="img-landing" style="opacity:0.6;">
+        </div>
+      </div>
+      <div class="slide-number">02</div>
+    </div>
+
+    <!-- SLIDE 3: The Problem -->
+    <div class="slide">
+      <div class="center-slide">
+        <span class="badge">2. The User & Problem</span>
+        <h2 class="title" style="font-size: 48px;">The Cost of Fragmentation</h2>
+        <p class="subtitle" style="max-width: 800px; margin: 0 auto 50px;">Writers, journalists, and legal professionals currently rely on a disconnected stack of generic tools.</p>
+        
+        <div class="grid-2" style="text-align: left;">
+          <div class="card">
+            <i class="ri-file-damage-line" style="color: #ef4444;"></i>
+            <h3>Context Switching</h3>
+            <p>Jumping between Docs (drafting), Slack (collaboration), Asana (workflows), and Wikis (knowledge) breaks focus and lowers quality.</p>
+          </div>
+          <div class="card">
+            <i class="ri-eye-off-line" style="color: #ef4444;"></i>
+            <h3>No UI Awareness</h3>
+            <p>A lawyer sees the exact same interface as a blogger. Generic tools lack structural support for profession-specific validation (like AP Style vs Bluebook).</p>
+          </div>
+          <div class="card">
+            <i class="ri-git-merge-line" style="color: #ef4444;"></i>
+            <h3>Workflow Friction</h3>
+            <p>Approvals happen via email strings, edits get lost in version histories, and final publishing requires manual porting to CMS engines.</p>
+          </div>
+          <div class="card">
+            <i class="ri-lock-unlock-line" style="color: #ef4444;"></i>
+            <h3>Flat Permissions</h3>
+            <p>Standard documents lack nuanced roles. "Lead Editors" and "Writers" experience the same unstructured access to files.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">03</div>
+    </div>
+
+    <!-- SLIDE 4: Our Solution -->
+    <div class="slide">
+      <div class="split-slide">
+        <div>
+          <span class="badge">3. Our Solution</span>
+          <h2 class="title">Intelligent &<br>Adaptive</h2>
+          <p class="body-text">Thread replaces the disconnected stack with a single, cohesive experience. The UI communicates professional awareness through layout, panels, and workflow structures.</p>
+          <ul style="color: var(--text-muted); font-size: 18px; line-height: 1.8; margin-top: 20px; padding-left: 20px;">
+            <li><strong>Profession Modes:</strong> Specific UI tooling for Journalism, Legal, and Writing.</li>
+            <li><strong>Multi-Tenant:</strong> Independent teams with defined roles coexist within one org.</li>
+            <li><strong>Integrated Intelligence:</strong> Contextual AI that understands style guides, flags risks, and generates citations.</li>
+          </ul>
+        </div>
+        <div class="image-container">
+           <img src="C:\Users\mihir shetty\.gemini\antigravity\brain\ed855091-f2e9-4d6e-a54f-c7059d3eb1af\dashboard_initial_view_1772934531227.png" alt="Dashboard Core">
+        </div>
+      </div>
+      <div class="slide-number">04</div>
+    </div>
+
+    <!-- SLIDE 5: User Journey Start -->
+    <div class="slide">
+      <div class="center-slide">
+        <span class="badge">4. User Flow</span>
+        <h2 class="title" style="font-size: 42px;">The Complete Journey</h2>
+        <p class="subtitle">From initial discovery to a fully structured, multi-role workspace.</p>
+        
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="fs-icon"><i class="ri-mac-line"></i></div>
+            <div class="fs-title">Landing & Discovery</div>
+            <div class="fs-desc">High-conversion marketing site communicating value.</div>
+          </div>
+          <div class="flow-step">
+            <div class="fs-icon"><i class="ri-user-add-line"></i></div>
+            <div class="fs-title">Auth & Config</div>
+            <div class="fs-desc">Email OTP registration, role selection, and workspace setup.</div>
+          </div>
+          <div class="flow-step">
+            <div class="fs-icon"><i class="ri-settings-3-line"></i></div>
+            <div class="fs-title">Onboarding</div>
+            <div class="fs-desc">Choosing profession modes, app themes, and inviting peers.</div>
+          </div>
+          <div class="flow-step">
+            <div class="fs-icon"><i class="ri-dashboard-line"></i></div>
+            <div class="fs-title">Adaptive Dashboard</div>
+            <div class="fs-desc">Dropping into a tailored UI built for their specific craft.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">05</div>
+    </div>
+
+    <!-- SLIDE 6: Landing Page Breakdown -->
+    <div class="slide">
+      <div class="split-slide">
+        <div>
+          <span class="badge">Deep Dive</span>
+          <h2 class="title" style="font-size: 36px;">1. The Landing Page</h2>
+          <p class="body-text">Designed to immediately communicate differentiation. Focuses on the "Writing together, thinking deeper" narrative.</p>
+          <div class="card" style="padding: 20px; margin-top: 20px;">
+            <h3>Key Features Showcased:</h3>
+            <ul style="color: var(--text-muted); margin-top: 10px; padding-left: 20px; line-height: 1.6; font-size: 15px;">
+              <li>Dynamic AI demonstration block.</li>
+              <li>Interactive toggles to preview Profession modes.</li>
+              <li>Clear visualization of the Editorial Pipeline.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="" alt="Landing Page Context" id="img-landing-2" style="background:#222">
+        </div>
+      </div>
+      <div class="slide-number">06</div>
+    </div>
+
+    <!-- SLIDE 7: Onboarding Flow Breakdown -->
+    <div class="slide">
+      <div class="split-slide">
+        <div class="image-container">
+          <img src="" alt="Onboarding Mockup" id="img-onboarding" style="background:#222">
+        </div>
+        <div>
+          <span class="badge">Deep Dive</span>
+          <h2 class="title" style="font-size: 36px;">2. Frictionless Onboarding</h2>
+          <p class="body-text">A 7-step wizard capturing user intent to pre-configure the interface. This ensures the "blank slate" problem is solved immediately.</p>
+          <ul style="color: var(--text-muted); font-size: 16px; line-height: 1.8; margin-top: 20px; padding-left: 20px;">
+            <li><strong>Org Creation:</strong> Auto-generating URL slugs for multi-tenant isolation.</li>
+            <li><strong>Profession Selection:</strong> Users explicitly choose between Writer, Journalism, or Legal modes.</li>
+            <li><strong>Preferences:</strong> Live theme toggles and font selection (Fraunces vs DM Sans).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-number">07</div>
+    </div>
+
+    <!-- SLIDE 8: Journalism Mode -->
+    <div class="slide">
+      <div class="split-slide">
+        <div>
+          <span class="badge">Adaptive UI: Journalism</span>
+          <h2 class="title" style="font-size: 40px;">Built for the Newsroom</h2>
+          <p class="body-text">When a user is in Journalism mode, the interface shifts slightly to accommodate fast-paced verification and publishing pipelines.</p>
+          <div class="grid-2">
+            <div class="card" style="padding: 15px;">
+              <i class="ri-newspaper-line" style="font-size: 24px;"></i>
+              <h3 style="font-size: 16px;">AP Style Monitor</h3>
+              <p style="font-size: 13px;">Real-time checks against journalistic standards.</p>
+            </div>
+            <div class="card" style="padding: 15px;">
+              <i class="ri-send-plane-line" style="font-size: 24px;"></i>
+              <h3 style="font-size: 16px;">Pipeline Tracking</h3>
+              <p style="font-size: 13px;">Visualizing what's actively in the queue or published.</p>
+            </div>
+          </div>
+        </div>
+        <div class="image-container">
+          <img src="C:\Users\mihir shetty\.gemini\antigravity\brain\ed855091-f2e9-4d6e-a54f-c7059d3eb1af\hackathon_features_demo_1772934497601.webp" alt="Journalism Dashboard">
+        </div>
+      </div>
+      <div class="slide-number">08</div>
+    </div>
+
+    <!-- SLIDE 9: Legal Mode -->
+    <div class="slide">
+      <div class="split-slide">
+        <div class="image-container">
+           <img src="C:\Users\mihir shetty\.gemini\antigravity\brain\ed855091-f2e9-4d6e-a54f-c7059d3eb1af\dashboard_screenshot_verify_1772933942666.webp" alt="Legal Dashboard">
+        </div>
+        <div>
+          <span class="badge">Adaptive UI: Legal</span>
+          <h2 class="title" style="font-size: 40px;">Precision & Compliance</h2>
+          <p class="body-text">Switching to Legal mode radically updates the dashboard widgets. Emphasis shifts from publishing speed to accurate risk management.</p>
+          <ul style="color: var(--text-muted); font-size: 16px; line-height: 1.8; margin-top: 20px; padding-left: 20px;">
+            <li><strong>Risk Flag Monitor:</strong> Dashboard widget highlighting HIGH and MODERATE phrasing risks across all documents.</li>
+            <li><strong>Active Matters:</strong> Organizing documents by case/client rather than generic folders.</li>
+            <li><strong>Bluebook formatting:</strong> AI shortcuts exclusively dedicated to legal citation formatting.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-number">09</div>
+    </div>
+
+    <!-- SLIDE 10: Role-Based Views -->
+    <div class="slide">
+      <div class="center-slide">
+        <span class="badge">Granular Access</span>
+        <h2 class="title" style="font-size: 42px;">Role-Based Functionality</h2>
+        <p class="subtitle">Different roles — Lead Editor, Reviewer, Writer, Publisher, Associate — experience tailored interfaces based on permissions.</p>
+        
+        <div class="grid-2" style="text-align: left; margin-top: 40px;">
+          <div class="card">
+            <h3><i class="ri-user-star-line" style="display:inline; font-size: 20px; margin-right: 8px;"></i> Lead Editor</h3>
+            <p>Full view. Access to the comprehensive Analytics dashboard, team activity tracking, and final approval queues.</p>
+          </div>
+          <div class="card">
+            <h3><i class="ri-edit-2-line" style="display:inline; font-size: 20px; margin-right: 8px;"></i> Writer</h3>
+            <p>Focused view. Analytics and team management navigation links are hidden. The interface emphasizes drafting and personal word goals.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">10</div>
+    </div>
+
+    <!-- SLIDE 11: Analytics & Calendar -->
+    <div class="slide">
+      <div class="split-slide">
+        <div>
+          <span class="badge">Global Features</span>
+          <h2 class="title" style="font-size: 36px;">Managing the Workflow</h2>
+          <p class="body-text">Beyond the core dashboard, Thread provides specialized views for managing the organization's output.</p>
+          
+          <div style="margin-top: 25px;">
+            <h4 style="font-size: 20px; margin-bottom: 5px; font-family: 'Fraunces', serif;">Analytics View</h4>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Live CSS-driven charts for Word Velocity and Author Breakdown, paired with an organizational Activity Feed.</p>
+            
+            <h4 style="font-size: 20px; margin-bottom: 5px; font-family: 'Fraunces', serif;">Editorial Calendar</h4>
+            <p style="font-size: 14px; color: var(--text-muted);">A visual timeline showing upcoming deadlines and the active publish schedule at a glance.</p>
+          </div>
+        </div>
+        <div class="image-container">
+           <img src="C:\Users\mihir shetty\.gemini\antigravity\brain\ed855091-f2e9-4d6e-a54f-c7059d3eb1af\dashboard_verification_1772933965638.png" alt="Analytics View">
+        </div>
+      </div>
+      <div class="slide-number">11</div>
+    </div>
+
+    <!-- SLIDE 12: Contextual Intelligence -->
+    <div class="slide">
+      <div class="split-slide">
+         <div class="image-container">
+           <img src="C:\Users\mihir shetty\.gemini\antigravity\brain\ed855091-f2e9-4d6e-a54f-c7059d3eb1af\dashboard_verification_1772933879407.webp" alt="Intelligence Panel">
+        </div>
+        <div>
+          <span class="badge">5. System & Design</span>
+          <h2 class="title" style="font-size: 36px;">Contextual Intelligence</h2>
+          <p class="body-text">The "Intelligence Layer" feels integrated rather than intrusive. The right-side panel is designed for context.</p>
+          <ul style="color: var(--text-muted); font-size: 16px; line-height: 1.8; margin-top: 20px; padding-left: 20px;">
+            <li><strong>Validate Tab:</strong> Surfaces profession-specific intelligence flags without cluttering the main typing UI.</li>
+            <li><strong>AI Tab:</strong> Suggests prompts specific to the active Mode (e.g., "Check Bluebook logic" vs "Suggest 5 Headlines").</li>
+            <li><strong>Search KB:</strong> Integrated Command Palette (⌘K) to quickly pull organizational knowledge while writing.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="slide-number">12</div>
+    </div>
+
+    <!-- SLIDE 13: Technical Architecture -->
+    <div class="slide">
+      <div class="center-slide">
+        <span class="badge">5. System & Design</span>
+        <h2 class="title" style="font-size: 42px;">Experience Principles & Architecture</h2>
+        <p class="subtitle" style="margin-bottom: 40px;">How the frontend delivers this cohesive experience.</p>
+        
+        <div class="grid-2" style="text-align: left;">
+          <div class="card">
+            <h3>Design Principles</h3>
+            <ul style="color: var(--text-muted); font-size: 14px; margin-left: 20px; margin-top: 10px; line-height: 1.6;">
+              <li><strong>Fluidity over fragmentation:</strong> Everything needed to publish must exist in the UI.</li>
+              <li><strong>Quiet Intelligence:</strong> AI assists on demand, avoiding intrusive pop-ups.</li>
+              <li><strong>Premium Layout:</strong> Deep, multi-layered UI with subtle cubic-bezier micro-animations.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Technical Delivery</h3>
+            <ul style="color: var(--text-muted); font-size: 14px; margin-left: 20px; margin-top: 10px; line-height: 1.6;">
+              <li><strong>DOM Manipulation:</strong> Extensive jQuery state management simulating instant backend API calls.</li>
+              <li><strong>CSS Architecture:</strong> Pure vanilla CSS utilizing root variables for robust Light/Dark mode transitions.</li>
+              <li><strong>Persistence:</strong> `localStorage` utilized for bypassing onboarding and remembering user state.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">13</div>
+    </div>
+
+    <!-- SLIDE 14: Impact & Next Steps -->
+    <div class="slide">
+      <div class="center-slide">
+        <span class="badge">6. Impact & Next Steps</span>
+        <h2 class="title" style="font-size: 48px;">Feasibility & Future Scope</h2>
+        <p class="subtitle" style="max-width: 800px; margin: 0 auto 50px;">The leap from an interactive prototype to a production-ready application.</p>
+        
+        <div class="grid-2" style="text-align: left;">
+          <div class="card">
+            <i class="ri-server-line" style="color: var(--accent);"></i>
+            <h3>Technical Viability</h3>
+            <p>The layout adapts flawlessly on the frontend. Next steps involve linking this to a Node.js/PostgreSQL backend utilizing CRDTs (like Yjs) for the real-time multiplayer editor.</p>
+          </div>
+          <div class="card">
+            <i class="ri-robot-2-line" style="color: var(--accent);"></i>
+            <h3>True AI Integration</h3>
+            <p>Wiring the Intelligence Panel logic to an LLM provider (like Anthropic Claude or OpenAI) utilizing context-windows fed by the user's specific Knowledge Base.</p>
+          </div>
+        </div>
+        
+        <div style="margin-top: 60px;">
+          <h3 style="color: var(--accent); font-size: 24px;">Thank you.</h3>
+          <p style="color: var(--text-muted); font-size: 16px;">Thread — Reimagining the Professional Workspace.</p>
+        </div>
+      </div>
+      <div class="slide-number">14</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn" id="prev-btn" disabled><i class="ri-arrow-left-s-line"></i></button>
+      <button class="ctrl-btn" id="next-btn"><i class="ri-arrow-right-s-line"></i></button>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const slides = document.querySelectorAll('.slide');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      let currentSlide = 0;
+
+      function updateSlides() {
+        slides.forEach((slide, index) => {
+          slide.classList.remove('active', 'previous');
+          if (index === currentSlide) {
+            slide.classList.add('active');
+          } else if (index < currentSlide) {
+            slide.classList.add('previous');
+          }
+        });
+
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === slides.length - 1;
+      }
+
+      nextBtn.addEventListener('click', () => {
+        if (currentSlide < slides.length - 1) {
+          currentSlide++;
+          updateSlides();
+        }
+      });
+
+      prevBtn.addEventListener('click', () => {
+        if (currentSlide > 0) {
+          currentSlide--;
+          updateSlides();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'Space') {
+          if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); }
+        } else if (e.key === 'ArrowLeft') {
+          if (currentSlide > 0) { currentSlide--; updateSlides(); }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
