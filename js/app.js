@@ -162,6 +162,28 @@ function openModal(html, size = '') {
 function closeModal() { $('#active-modal').remove(); }
 $(document).on('click', '.modal-close', closeModal);
 
+function openPromptModal(title, icon, label, placeholder, onConfirm) {
+  openModal(`
+    <button class="modal-close"><i class="ri-close-line"></i></button>
+    <div class="modal-title"><i class="${icon}"></i> ${title}</div>
+    <div class="form-group">
+      <label class="form-label">${label}</label>
+      <input type="text" class="form-input" id="pm-input" placeholder="${placeholder}">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost modal-close">Cancel</button>
+      <button class="btn btn-primary" id="pm-confirm"><i class="ri-check-line"></i> Confirm</button>
+    </div>
+  `, 'modal-sm');
+  $('#pm-confirm').on('click', () => {
+    const v = $('#pm-input').val().trim();
+    if(v) { closeModal(); onConfirm(v); }
+  });
+  $('#pm-input').on('keydown', e => {
+    if(e.key === 'Enter') $('#pm-confirm').click();
+  });
+}
+
 // ─── DROPDOWN ───
 function showDropdown(items, $anchor) {
   $('.dropdown-menu').not('#context-menu').remove();
@@ -767,11 +789,10 @@ function bindDashboard() {
   $('#btn-new-doc').on('click', openNewDocModal);
   $('#btn-goto-queue').on('click', () => switchView('queue'));
   $('#btn-new-folder').on('click', () => {
-    const fn = prompt('Enter folder name:');
-    if(fn) {
+    openPromptModal('New Folder', 'ri-folder-add-line', 'Folder Name', 'Enter folder name', (fn) => {
       $('#ws-folders').append(`<div class="sidebar-doc-item"><div class="sdot" style="background:var(--lemon)"></div><div class="sname">${fn}</div></div>`);
       toast('success', `Folder "${fn}" created`);
-    }
+    });
   });
   $('#btn-view-all-docs').on('click', openAllDocsModal);
   $('#btn-new-article').on('click', openNewArticleModal);
@@ -1011,7 +1032,12 @@ function bindEditor() {
       : document.execCommand('insertHTML', false, '<code>code</code>');
   });
   $('#tb-hr').on('click', () => document.execCommand('insertHTML', false, '<hr>'));
-  $('#tb-link').on('click', () => { const u = prompt('Enter URL:'); if (u) document.execCommand('createLink', false, u.startsWith('http') ? u : 'https://' + u); });
+  $('#tb-link').on('click', () => {
+    openPromptModal('Insert Link', 'ri-link', 'URL', 'https://example.com', (u) => {
+      document.execCommand('createLink', false, u.startsWith('http') ? u : 'https://' + u);
+      $('#doc-content').trigger('focus');
+    });
+  });
   $('#tb-align-l').on('click', () => fmt('justifyLeft'));
   $('#tb-align-c').on('click', () => fmt('justifyCenter'));
   $('#tb-align-r').on('click', () => fmt('justifyRight'));
@@ -1492,8 +1518,8 @@ const MODES = {
     widget: () => `
           <div class="mode-widget">
             <div class="mode-widget-title" style="color:var(--lav)"><i class="ri-shield-check-line"></i> Risk Flag Monitor</div>
-            <div class="case-item"><span class="risk-chip risk-high">HIGH</span><span style="font-size:12px;flex:1">Liability clause in §3.2 — ambiguous scope. Review required.</span></div>
-            <div class="case-item"><span class="risk-chip risk-med">MED</span><span style="font-size:12px;flex:1">Citation 14 CFR §25.1309 — verify revision year.</span></div>
+            <div class="case-item"><span class="risk-chip risk-high">HIGH</span><span style="font-size:12px;flex:1">Liability clause in Section 3.2 — ambiguous scope. Review required.</span></div>
+            <div class="case-item"><span class="risk-chip risk-med">MED</span><span style="font-size:12px;flex:1">Citation 14 CFR 25.1309 — verify revision year.</span></div>
             <div class="case-item"><span class="risk-chip risk-low">LOW</span><span style="font-size:12px;flex:1">Standard boilerplate detected — may require jurisdiction check.</span></div>
           </div>
           <div class="mode-widget">
@@ -1859,8 +1885,9 @@ function renderTeamsView() {
         </div>`);
   $('#btn-invite-member,#btn-invite-member2').on('click', openInviteModal);
   $('#btn-new-team,#btn-new-team2').on('click', () => {
-    const tn = prompt('Enter new team name:');
-    if(tn) toast('success', `Team "${tn}" created (Demo)`);
+    openPromptModal('New Team', 'ri-group-line', 'Team Name', 'Enter new team name', (tn) => {
+      toast('success', `Team "${tn}" created (Demo)`);
+    });
   });
 }
 
@@ -1882,8 +1909,8 @@ function renderIntelPanel() {
   } else if (mode === 'legal') {
     html = `
           <div class="intel-section-hd"><i class="ri ri-scales-line"></i> Risk Flags</div>
-          <div class="intel-flag error"><i class="ri-close-circle-line"></i><span><strong>§3.2 Liability clause</strong> — ambiguous scope may expose party to unintended risk. Legal review required.</span></div>
-          <div class="intel-flag warn"><i class="ri-alert-line"></i><span><strong>Citation: 14 CFR §25.1309</strong> — verify current revision year (2023 vs 2024).</span></div>
+          <div class="intel-flag error"><i class="ri-close-circle-line"></i><span><strong>Section 3.2 Liability clause</strong> — ambiguous scope may expose party to unintended risk. Legal review required.</span></div>
+          <div class="intel-flag warn"><i class="ri-alert-line"></i><span><strong>Citation: 14 CFR 25.1309</strong> — verify current revision year (2023 vs 2024).</span></div>
           <div class="intel-flag ok"><i class="ri-check-circle-line"></i><span>Parties correctly identified and styled per jurisdiction conventions.</span></div>
           <div class="intel-section-hd"><i class="ri ri-book-2-line"></i> Bluebook Citations</div>
           <div class="intel-flag info"><i class="ri-information-line"></i><span>Short form citation used on 3rd reference (cf. Rule 10.9) — acceptable.</span></div>
@@ -1931,7 +1958,7 @@ CMD_ITEMS.push(
 
 // Init mode and role on load
 const savedMode = LS.get('user', {}).mode;
-if (savedMode) switchProfessionMode(savedMode);
+if (savedMode) applyMode(savedMode);
 switchRole('Lead Editor');
 
 if (STATE.onboarded) {
