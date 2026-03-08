@@ -1,7 +1,142 @@
-
 /* ══════════════════════════════════════════════
    THREAD — Full App  |  jQuery + localStorage
+   RBAC: Lead Editor, Editor, Reviewer, Writer, Publisher, Associate
 ══════════════════════════════════════════════ */
+
+// ─── ROLE DEFINITIONS (single source of truth) ───
+const ROLE_PERMISSIONS = {
+  lead: {
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+    canReview: true,
+    canApprove: true,
+    canPublish: true,
+    canManageTeam: true,
+    canViewAnalytics: true,
+    canViewQueue: true,
+    canViewTeams: true,
+    canComment: true,
+    canViewEditor: true,
+    canSubmitForReview: true,
+    canRequestRevision: true,
+    canViewKB: true,
+    canManageKB: true,
+    canViewCalendar: true,
+    canViewSettings: true,
+    canManageSettings: true,
+  },
+  editor: {
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+    canReview: true,
+    canApprove: true,
+    canPublish: false,
+    canManageTeam: true,
+    canViewAnalytics: true,
+    canViewQueue: true,
+    canViewTeams: true,
+    canComment: true,
+    canViewEditor: true,
+    canSubmitForReview: true,
+    canRequestRevision: true,
+    canViewKB: true,
+    canManageKB: true,
+    canViewCalendar: true,
+    canViewSettings: true,
+    canManageSettings: false,
+  },
+  reviewer: {
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    canReview: true,
+    canApprove: false,
+    canPublish: false,
+    canManageTeam: false,
+    canViewAnalytics: false,
+    canViewQueue: true,
+    canViewTeams: false,
+    canComment: true,
+    canViewEditor: true,
+    canSubmitForReview: false,
+    canRequestRevision: true,
+    canViewKB: true,
+    canManageKB: false,
+    canViewCalendar: true,
+    canViewSettings: true,
+    canManageSettings: false,
+  },
+  writer: {
+    canCreate: true,
+    canEdit: true, // own docs only (enforced contextually)
+    canDelete: false,
+    canReview: false,
+    canApprove: false,
+    canPublish: false,
+    canManageTeam: false,
+    canViewAnalytics: false,
+    canViewQueue: false,
+    canViewTeams: false,
+    canComment: true,
+    canViewEditor: true,
+    canSubmitForReview: true,
+    canRequestRevision: false,
+    canViewKB: true,
+    canManageKB: false,
+    canViewCalendar: true,
+    canViewSettings: true,
+    canManageSettings: false,
+  },
+  publisher: {
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    canReview: false,
+    canApprove: false,
+    canPublish: true,
+    canManageTeam: false,
+    canViewAnalytics: false,
+    canViewQueue: true,
+    canViewTeams: false,
+    canComment: false,
+    canViewEditor: true,
+    canSubmitForReview: false,
+    canRequestRevision: false,
+    canViewKB: true,
+    canManageKB: false,
+    canViewCalendar: true,
+    canViewSettings: true,
+    canManageSettings: false,
+  },
+  associate: {
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    canReview: false,
+    canApprove: false,
+    canPublish: false,
+    canManageTeam: false,
+    canViewAnalytics: false,
+    canViewQueue: false,
+    canViewTeams: false,
+    canComment: true,
+    canViewEditor: true, // read-only
+    canSubmitForReview: false,
+    canRequestRevision: false,
+    canViewKB: true,
+    canManageKB: false,
+    canViewCalendar: false,
+    canViewSettings: true,
+    canManageSettings: false,
+  },
+};
+
+function can(permission) {
+  const perms = ROLE_PERMISSIONS[currentRole];
+  return perms ? !!perms[permission] : false;
+}
 
 // ─── STORAGE ───
 const LS = {
@@ -177,10 +312,10 @@ function openPromptModal(title, icon, label, placeholder, onConfirm) {
   `, 'modal-sm');
   $('#pm-confirm').on('click', () => {
     const v = $('#pm-input').val().trim();
-    if(v) { closeModal(); onConfirm(v); }
+    if (v) { closeModal(); onConfirm(v); }
   });
   $('#pm-input').on('keydown', e => {
-    if(e.key === 'Enter') $('#pm-confirm').click();
+    if (e.key === 'Enter') $('#pm-confirm').click();
   });
 }
 
@@ -218,313 +353,6 @@ function closeAllOverlays() {
   $('#profile-dropdown').addClass('hidden');
 }
 
-/* ══════════════ ONBOARDING ══════════════ */
-const OB_STEPS = [
-  { id: 1, icon: 'ri-user-add-line', title: 'Create your account', sub: 'Join thousands of writers already on Thread.' },
-  { id: 2, icon: 'ri-mail-send-line', title: 'Verify your email', sub: 'We sent a 6-digit code. Enter it below to continue.' },
-  { id: 3, icon: 'ri-hand-heart-line', title: 'Tell us about yourself', sub: 'Help us personalise your Thread experience.' },
-  { id: 4, icon: 'ri-building-2-line', title: 'Set up your workspace', sub: 'Create your team or personal workspace.' },
-  { id: 5, icon: 'ri-focus-3-line', title: 'Choose your writing mode', sub: 'Pick the mode that fits your work best. Change anytime.' },
-  { id: 6, icon: 'ri-palette-line', title: 'Customise Thread', sub: 'Set your look and preferences — tweak these anytime in Settings.' },
-  { id: 7, icon: 'ri-team-line', title: 'Invite your team', sub: 'Add teammates now or skip and invite them later.' },
-];
-
-function initOnboarding() {
-  renderObProgress(1);
-  renderObStep(1);
-}
-function renderObProgress(step) {
-  STATE.obStep = step;
-  let h = '';
-  OB_STEPS.forEach((s, i) => {
-    if (i > 0) h += `<div class="ob-step-line ${s.id <= step ? 'done' : ''}"></div>`;
-    const cls = s.id < step ? 'done' : s.id === step ? 'active' : 'todo';
-    h += `<div class="ob-step-dot ${cls}" data-step="${s.id}">${s.id < step ? '<i class="ri-check-line"></i>' : s.id}</div>`;
-  });
-  $('#ob-steps-row').html(h);
-  $('#ob-progress-label').html(`Step <em>${step}</em> of 7 — ${OB_STEPS[step - 1].title}`);
-  $('.ob-step-dot.done').on('click', function () { goOb(+$(this).data('step')); });
-}
-function goOb(step) { renderObProgress(step); renderObStep(step); }
-function renderObStep(step) {
-  const s = OB_STEPS[step - 1];
-  let c = '';
-  if (step === 1) {
-    const d = STATE.obData;
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-      <button class="btn btn-ghost w-full" style="justify-content:center" id="ob-google"><i class="ri-google-fill" style="color:#4285F4"></i> Google</button>
-      <button class="btn btn-ghost w-full" style="justify-content:center" id="ob-github"><i class="ri-github-fill"></i> GitHub</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--text3);font-size:12px"><span style="flex:1;height:1px;background:var(--border)"></span>or with email<span style="flex:1;height:1px;background:var(--border)"></span></div>
-    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="ob-name" placeholder="Your name" value="${d.name || ''}"></div>
-    <div class="form-group"><label class="form-label">Email Address *</label><input class="form-input" id="ob-email" type="email" placeholder="you@example.com" value="${d.email || ''}"></div>
-    <div class="form-group"><label class="form-label">Password *</label><input class="form-input" id="ob-pw" type="password" placeholder="8+ characters">
-      <div class="pw-bar-wrap"><div class="pw-bar" id="ob-pw-bar" style="width:0"></div></div>
-      <div class="pw-hint" id="ob-pw-hint" style="color:var(--text3)">Enter a password</div>
-    </div>
-    <div class="ob-btn-row"><button class="btn btn-primary" id="ob-next-1" disabled><i class="ri-arrow-right-line"></i> Create Account</button></div>
-    <div class="ob-skip">Already have an account? <a id="ob-signin">Sign in</a></div>`;
-  } else if (step === 2) {
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2>
-    <p class="ob-step-sub">We sent a code to <strong>${STATE.obData.email || 'your email'}</strong></p>
-    <div class="otp-row" id="otp-row">${[0, 1, 2, 3, 4, 5].map(i => `<input class="otp-digit" maxlength="1" id="otp-${i}" inputmode="numeric">`).join('')}</div>
-    <div style="text-align:center;font-size:13px;color:var(--text3);margin-bottom:16px">
-      Didn't get it? <button class="btn btn-sm btn-ghost" id="ob-resend" disabled style="padding:3px 10px"><i class="ri-refresh-line"></i> Resend <span id="ob-resend-timer">(60s)</span></button>
-    </div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-2"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-next-2" disabled><i class="ri-check-line"></i> Verify</button>
-    </div>`;
-  } else if (step === 3) {
-    const d = STATE.obData;
-    const roles = ['Writer', 'Journalist', 'Legal Pro', 'Editor', 'Content Manager', 'Other'];
-    const types = ['Articles & Blogs', 'News Reporting', 'Legal Docs', 'Scripts', 'Marketing', 'Technical', 'Fiction', 'Research'];
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div class="form-label" style="margin-bottom:6px">Your Role</div>
-    <div class="option-grid cols-3" id="role-grid">${roles.map(r => `<div class="option-card ${d.role === r ? 'selected' : ''}" data-role="${r}"><i class="ri-user-3-line"></i><div class="option-card-label">${r}</div></div>`).join('')}</div>
-    <div class="form-label" style="margin-bottom:6px">Writing Types <span style="font-weight:400;color:var(--text3)">(select all)</span></div>
-    <div class="tag-select" id="type-tags">${types.map(t => `<div class="tag-option ${(d.types || []).includes(t) ? 'selected' : ''}" data-type="${t}">${t}</div>`).join('')}</div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-3"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-next-3"><i class="ri-arrow-right-line"></i> Continue</button>
-    </div>`;
-  } else if (step === 4) {
-    const d = STATE.obData;
-    const orgTypes = ['Solo Workspace', 'Small Team (2–10)', 'Agency', 'Newsroom', 'Law Firm', 'Enterprise'];
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div class="form-group"><label class="form-label">Workspace Name *</label><input class="form-input" id="ob-org-name" placeholder="City Beat Newsroom" value="${d.orgName || ''}"></div>
-    <div class="form-group"><label class="form-label">URL Slug</label><input class="form-input" id="ob-org-slug" placeholder="city-beat" value="${d.orgSlug || ''}">
-      <div class="slug-preview">thread.app/<span class="slug-val" id="ob-slug-val">${d.orgSlug || 'your-workspace'}</span></div>
-      <div class="slug-avail" id="ob-slug-avail"></div>
-    </div>
-    <div class="form-label" style="margin-bottom:6px">Workspace Type</div>
-    <div class="option-grid cols-2" id="org-type-grid">${orgTypes.map(t => `<div class="option-card ${d.orgType === t ? 'selected' : ''}" data-orgtype="${t}"><i class="ri-building-2-line"></i><div class="option-card-label">${t}</div></div>`).join('')}</div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-4"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-next-4"><i class="ri-arrow-right-line"></i> Continue</button>
-    </div>`;
-  } else if (step === 5) {
-    const d = STATE.obData;
-    const modes = [
-      { key: 'writer', icon: 'ri-edit-2-line', title: 'Writer', desc: 'For bloggers, content teams, and independent creators', feats: ['Flexible templates', 'AI continue & improve', 'Word count goals'] },
-      { key: 'journalism', icon: 'ri-newspaper-line', title: 'Journalism', desc: 'For reporters, editors, and newsrooms', feats: ['AP Style enforcement', 'AI headline generator', 'Source tracking'] },
-      { key: 'legal', icon: 'ri-scales-line', title: 'Legal', desc: 'For attorneys, paralegals, and legal teams', feats: ['Tracked changes always on', 'AI clause review', 'Bluebook citations'] },
-    ];
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px" id="mode-cards">
-      ${modes.map(m => `<div class="mode-pick-card" data-mode="${m.key}" style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:12px;border:2px solid ${d.mode === m.key ? 'var(--peach)' : 'var(--border)'};background:${d.mode === m.key ? 'var(--peach-ll)' : 'var(--card)'};cursor:pointer;transition:all .2s var(--spring)">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--peach-ll);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="${m.icon}" style="font-size:20px;color:var(--peach)"></i></div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:2px">${m.title}</div><div style="font-size:12px;color:var(--text3);margin-bottom:6px">${m.desc}</div>
-          <div style="display:flex;flex-direction:column;gap:3px">${m.feats.map(f => `<div style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px"><i class="ri-check-line" style="color:var(--peach)"></i>${f}</div>`).join('')}</div>
-        </div>${d.mode === m.key ? '<i class="ri-check-circle-fill" style="color:var(--peach);font-size:18px;flex-shrink:0"></i>' : ''}
-      </div>`).join('')}
-    </div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-5"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-next-5" ${d.mode ? '' : 'disabled'}><i class="ri-arrow-right-line"></i> Continue</button>
-    </div>`;
-  } else if (step === 6) {
-    const d = STATE.obData;
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div class="form-label" style="margin-bottom:8px">Theme</div>
-    <div class="theme-picker">
-      <div class="theme-card ${(!d.theme || d.theme === 'light') ? 'selected' : ''}" data-theme-pick="light">
-        <div class="theme-preview" style="background:#FFFBF7"><div class="theme-bar" style="background:#F4845F"></div><div class="theme-bar" style="background:#FFDAB9;width:40%"></div></div>
-        <div class="theme-label-text"><i class="ri-sun-line"></i> Light</div>
-      </div>
-      <div class="theme-card ${d.theme === 'dark' ? 'selected' : ''}" data-theme-pick="dark">
-        <div class="theme-preview" style="background:#0A0A0A"><div class="theme-bar" style="background:#F97316"></div><div class="theme-bar" style="background:#431407;width:40%"></div></div>
-        <div class="theme-label-text"><i class="ri-moon-line"></i> Dark</div>
-      </div>
-      <div class="theme-card ${d.theme === 'system' ? 'selected' : ''}" data-theme-pick="system">
-        <div class="theme-preview" style="background:linear-gradient(135deg,#FFFBF7 50%,#0A0A0A 50%)"><i class="ri-computer-line" style="font-size:22px;color:var(--text3)"></i></div>
-        <div class="theme-label-text"><i class="ri-computer-line"></i> System</div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
-        <div><div style="font-size:13px;font-weight:600">AI Writing Assistant</div><div style="font-size:11px;color:var(--text3)">Inline AI commands in the editor</div></div>
-        <div class="toggle-switch ${d.aiEnabled !== false ? 'on' : ''}" id="ob-ai-toggle"><div class="toggle-thumb"></div></div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
-        <div><div style="font-size:13px;font-weight:600">Email Notifications</div><div style="font-size:11px;color:var(--text3)">Approvals, comments, and digest</div></div>
-        <div class="toggle-switch ${d.emailNotifs !== false ? 'on' : ''}" id="ob-notif-toggle"><div class="toggle-thumb"></div></div>
-      </div>
-    </div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-6"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-next-6"><i class="ri-arrow-right-line"></i> Continue</button>
-    </div>`;
-  } else if (step === 7) {
-    c = `<div class="ob-step-icon"><i class="${s.icon}"></i></div>
-    <h2 class="ob-step-title">${s.title}</h2><p class="ob-step-sub">${s.sub}</p>
-    <div class="form-label" style="margin-bottom:5px">Invite by email</div>
-    <div class="invite-chip-field" id="invite-chip-field">
-      ${(STATE.obData.invites || []).map(e => `<div class="invite-chip" data-email="${e}"><span>${e}</span><span class="invite-chip-x" data-chip="${e}"><i class="ri-close-line"></i></span></div>`).join('')}
-      <input type="text" class="invite-text-input" id="invite-input" placeholder="email@example.com — press Enter to add">
-    </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Press Enter or comma after each email address</div>
-    <div class="form-label" style="margin-bottom:6px">Default role</div>
-    <div class="option-grid cols-3" id="invite-role-grid" style="margin-bottom:14px">
-      <div class="option-card ${(STATE.obData.inviteRole || 'Writer') === 'Viewer' ? 'selected' : ''}" data-inv-role="Viewer"><i class="ri-eye-line"></i><div class="option-card-label">Viewer</div></div>
-      <div class="option-card ${(STATE.obData.inviteRole || 'Writer') === 'Writer' ? 'selected' : ''}" data-inv-role="Writer"><i class="ri-edit-2-line"></i><div class="option-card-label">Writer</div></div>
-      <div class="option-card ${(STATE.obData.inviteRole || 'Writer') === 'Editor' ? 'selected' : ''}" data-inv-role="Editor"><i class="ri-user-settings-line"></i><div class="option-card-label">Editor</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--bg3);border-radius:10px;margin-bottom:16px">
-      <i class="ri-link" style="font-size:16px;color:var(--text3)"></i>
-      <span style="flex:1;font-size:12px;color:var(--text2)">Share invite link</span>
-      <button class="btn btn-sm btn-ghost" id="ob-copy-link"><i class="ri-clipboard-line"></i> Copy</button>
-    </div>
-    <div class="ob-btn-row">
-      <button class="btn btn-ghost" id="ob-back-7"><i class="ri-arrow-left-line"></i> Back</button>
-      <button class="btn btn-primary" id="ob-launch" style="background:linear-gradient(135deg,var(--peach),var(--blush))"><i class="ri-rocket-line"></i> Launch Thread</button>
-    </div>
-    <div class="ob-skip"><a id="ob-skip-invite">Skip — invite teammates later</a></div>`;
-  }
-  $('#ob-step-container').html(`<div class="ob-step-card">${c}</div>`);
-  bindObStep(step);
-}
-
-function bindObStep(step) {
-  if (step === 1) {
-    $('#ob-name,#ob-email,#ob-pw').on('input', function () {
-      const n = $('#ob-name').val().trim(), e = $('#ob-email').val().trim(), p = $('#ob-pw').val();
-      const lvls = [{ min: 0, w: '0', c: '', m: 'Enter a password' }, { min: 1, w: '20%', c: '#EF4444', m: 'Very weak' }, { min: 6, w: '40%', c: '#F97316', m: 'Weak' }, { min: 8, w: '60%', c: '#F5C842', m: 'Fair' }, { min: 10, w: '80%', c: '#10B981', m: 'Strong' }, { min: 14, w: '100%', c: '#059669', m: 'Very strong ✓' }];
-      let lv = lvls[0]; for (const l of lvls) if (p.length >= l.min) lv = l;
-      $('#ob-pw-bar').css({ width: lv.w, background: lv.c });
-      $('#ob-pw-hint').text(lv.m).css('color', lv.c || 'var(--text3)');
-      $('#ob-next-1').prop('disabled', !(n && e.includes('@') && p.length >= 8));
-    });
-    $('#ob-next-1').on('click', function () {
-      STATE.obData.name = $('#ob-name').val().trim();
-      STATE.obData.email = $('#ob-email').val().trim();
-      goOb(2); startOtpTimer();
-    });
-    $('#ob-google,#ob-github').on('click', function () {
-      STATE.obData.name = 'Ayushi Upadhyay'; STATE.obData.email = 'ayushi@citybeat.com';
-      goOb(2); startOtpTimer();
-    });
-    $('#ob-signin').on('click', finishOnboarding);
-  } else if (step === 2) {
-    startOtpTimer();
-    $('.otp-digit').on('input', function () {
-      const idx = +this.id.split('-')[1];
-      $(this).toggleClass('filled', $(this).val() !== '');
-      if ($(this).val() && idx < 5) $(`#otp-${idx + 1}`).trigger('focus');
-      const all = [0, 1, 2, 3, 4, 5].every(i => $(`#otp-${i}`).val() !== '');
-      $('#ob-next-2').prop('disabled', !all);
-    });
-    $('.otp-digit').on('keydown', function (e) {
-      const idx = +this.id.split('-')[1];
-      if (e.key === 'Backspace' && !$(this).val() && idx > 0) { $(`#otp-${idx - 1}`).val('').trigger('focus').removeClass('filled'); }
-    });
-    $('#ob-next-2').on('click', () => goOb(3));
-    $('#ob-back-2').on('click', () => goOb(1));
-    $('#ob-resend').on('click', () => { toast('info', 'Code resent!', 'ri-mail-send-line'); startOtpTimer(); });
-  } else if (step === 3) {
-    $('#role-grid .option-card').on('click', function () { $('#role-grid .option-card').removeClass('selected'); $(this).addClass('selected'); STATE.obData.role = $(this).data('role'); });
-    $('#type-tags .tag-option').on('click', function () { $(this).toggleClass('selected'); STATE.obData.types = $('#type-tags .tag-option.selected').map(function () { return $(this).data('type'); }).get(); });
-    $('#ob-next-3').on('click', () => goOb(4));
-    $('#ob-back-3').on('click', () => goOb(2));
-  } else if (step === 4) {
-    let slugTimer;
-    $('#ob-org-name').on('input', function () {
-      const slug = $(this).val().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      $('#ob-org-slug').val(slug); $('#ob-slug-val').text(slug || 'your-workspace');
-      STATE.obData.orgName = $(this).val(); STATE.obData.orgSlug = slug;
-      clearTimeout(slugTimer); slugTimer = setTimeout(() => checkSlug(slug), 500);
-    });
-    $('#ob-org-slug').on('input', function () {
-      $('#ob-slug-val').text($(this).val() || 'your-workspace'); STATE.obData.orgSlug = $(this).val();
-      clearTimeout(slugTimer); slugTimer = setTimeout(() => checkSlug($(this).val()), 500);
-    });
-    $('#org-type-grid .option-card').on('click', function () { $('#org-type-grid .option-card').removeClass('selected'); $(this).addClass('selected'); STATE.obData.orgType = $(this).data('orgtype'); });
-    $('#ob-next-4').on('click', () => goOb(5));
-    $('#ob-back-4').on('click', () => goOb(3));
-  } else if (step === 5) {
-    $('#mode-cards .mode-pick-card').on('click', function () { STATE.obData.mode = $(this).data('mode'); goOb(5); });
-    $('#ob-next-5').on('click', () => goOb(6));
-    $('#ob-back-5').on('click', () => goOb(4));
-  } else if (step === 6) {
-    $(document).on('click.thpick', '.theme-card', function () {
-      $('.theme-card').removeClass('selected'); $(this).addClass('selected');
-      STATE.obData.theme = $(this).data('theme-pick');
-      if (STATE.obData.theme !== 'system') applyTheme(STATE.obData.theme);
-    });
-    $('#ob-ai-toggle').on('click', function () { $(this).toggleClass('on'); STATE.obData.aiEnabled = $(this).hasClass('on'); });
-    $('#ob-notif-toggle').on('click', function () { $(this).toggleClass('on'); STATE.obData.emailNotifs = $(this).hasClass('on'); });
-    $('#ob-next-6').on('click', () => { $(document).off('click.thpick'); goOb(7); });
-    $('#ob-back-6').on('click', () => { $(document).off('click.thpick'); goOb(5); });
-  } else if (step === 7) {
-    $('#invite-input').on('keydown', function (e) {
-      if ((e.key === 'Enter' || e.key === ',') && $(this).val().trim()) {
-        e.preventDefault();
-        const email = $(this).val().trim().replace(',', '');
-        if (email.includes('@') && !(STATE.obData.invites || []).includes(email)) {
-          STATE.obData.invites = (STATE.obData.invites || []).concat(email);
-          const $chip = $(`<div class="invite-chip" data-email="${email}"><span>${email}</span><span class="invite-chip-x" data-chip="${email}"><i class="ri-close-line"></i></span></div>`);
-          $chip.insertBefore($(this));
-        }
-        $(this).val('');
-      }
-    });
-    $(document).on('click.chips', '.invite-chip-x', function () {
-      const em = $(this).data('chip');
-      STATE.obData.invites = (STATE.obData.invites || []).filter(x => x !== em);
-      $(`[data-email="${em}"]`).remove();
-    });
-    $('#invite-role-grid .option-card').on('click', function () { $('#invite-role-grid .option-card').removeClass('selected'); $(this).addClass('selected'); STATE.obData.inviteRole = $(this).data('inv-role'); });
-    $('#ob-copy-link').on('click', function () {
-      $(this).html('<i class="ri-check-line"></i> Copied!').css('color', 'var(--mint)');
-      setTimeout(() => $(this).html('<i class="ri-clipboard-line"></i> Copy').css('color', ''), 2000);
-    });
-    $('#ob-launch,#ob-skip-invite').on('click', () => { $(document).off('click.chips'); finishOnboarding(); });
-    $('#ob-back-7').on('click', () => { $(document).off('click.chips'); goOb(6); });
-  }
-}
-
-let otpInt;
-function startOtpTimer() {
-  clearInterval(otpInt); let sec = 60;
-  $('#ob-resend').prop('disabled', true); $('#ob-resend-timer').text(`(${sec}s)`);
-  otpInt = setInterval(() => { sec--; $('#ob-resend-timer').text(`(${sec}s)`); if (sec <= 0) { clearInterval(otpInt); $('#ob-resend').prop('disabled', false); $('#ob-resend-timer').text(''); } }, 1000);
-}
-function checkSlug(slug) {
-  if (!slug) { $('#ob-slug-avail').html(''); return; }
-  $('#ob-slug-avail').html('<i class="ri-loader-4-line"></i> Checking…').removeClass('ok taken');
-  setTimeout(() => {
-    const taken = ['thread', 'newsroom', 'media', 'legal', 'writers'];
-    const ok = !taken.includes(slug.toLowerCase());
-    $('#ob-slug-avail').html(`<i class="ri-${ok ? 'check-circle' : 'close-circle'}-line"></i> ${ok ? 'Available' : 'Already taken'}`).addClass(ok ? 'ok' : 'taken');
-  }, 600);
-}
-function finishOnboarding() {
-  const d = STATE.obData;
-  if (d.name) STATE.user.name = d.name;
-  if (d.email) STATE.user.email = d.email;
-  if (d.mode) STATE.user.mode = d.mode;
-  if (d.orgName) STATE.user.org = d.orgName;
-  if (d.orgSlug) STATE.user.orgSlug = d.orgSlug;
-  if (d.aiEnabled !== undefined) STATE.user.aiEnabled = d.aiEnabled;
-  if (d.emailNotifs !== undefined) STATE.user.emailNotifs = d.emailNotifs;
-  if (d.theme) STATE.user.theme = d.theme;
-  const words = STATE.user.name.split(' ');
-  STATE.user.initials = (words[0][0] + (words[1] ? words[1][0] : '')).toUpperCase();
-  clearInterval(otpInt);
-  LS.set('onboarded', true);
-  persist();
-  STATE.onboarded = true;
-  $('#onboarding-overlay').addClass('hidden');
-  launchApp();
-}
-
 /* ══════════════ APP ══════════════ */
 function launchApp() {
   $('#app').removeClass('hidden');
@@ -547,6 +375,8 @@ function launchApp() {
   bindCmdPalette();
   renderResearchDefault();
   toast('success', `Welcome back, ${STATE.user.name.split(' ')[0]}!`, 'ri-hand-coin-line');
+  currentRole = STATE.user.role || 'lead';
+  applyRole(currentRole);
 }
 
 // ─── USER UI ───
@@ -581,6 +411,21 @@ const AGCS = ['linear-gradient(135deg,var(--peach),var(--blush))', 'linear-gradi
 function badgeHtml(st) { const c = SC[st] || SC.draft; return `<span class="badge ${c.cls}">${c.label}</span>`; }
 function avHtml(init, i, sz = 22) { return `<div class="av-sm" style="width:${sz}px;height:${sz}px;font-size:${sz < 22 ? 9 : 9}px;background:${AGCS[i % AGCS.length]}">${init}</div>`; }
 
+// ─── RBAC BANNER ───
+function renderRoleBanner() {
+  const role = ROLES.find(r => r.key === currentRole);
+  if (!role) return;
+  // Show a subtle read-only banner for restricted roles
+  $('#role-access-banner').remove();
+  if (currentRole === 'associate') {
+    $('<div id="role-access-banner" style="background:var(--lav-ll);border-bottom:1px solid var(--lav);padding:7px 20px;font-size:12px;color:var(--lav);font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ri-eye-line"></i> You are in <strong>Associate (View-Only)</strong> mode. You can read and comment, but cannot create or edit documents.</div>').insertAfter('#topbar');
+  } else if (currentRole === 'publisher') {
+    $('<div id="role-access-banner" style="background:var(--mint-ll);border-bottom:1px solid var(--mint);padding:7px 20px;font-size:12px;color:var(--mint);font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ri-rocket-line"></i> You are in <strong>Publisher</strong> mode. You can only publish approved documents.</div>').insertAfter('#topbar');
+  } else if (currentRole === 'reviewer') {
+    $('<div id="role-access-banner" style="background:var(--sky-ll);border-bottom:1px solid var(--sky);padding:7px 20px;font-size:12px;color:var(--sky);font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ri-search-eye-line"></i> You are in <strong>Reviewer</strong> mode. You can annotate and request revisions, but cannot publish.</div>').insertAfter('#topbar');
+  }
+}
+
 // ─── STATS ───
 function renderStats() {
   const docs = STATE.docs;
@@ -588,25 +433,66 @@ function renderStats() {
   const review = docs.filter(d => d.status === 'review').length;
   const published = docs.filter(d => d.status === 'published').length;
   const words = docs.reduce((a, d) => a + (d.words || 0), 0);
-  const s = [
-    { lbl: 'Active Docs', icon: 'ri-file-edit-line', val: active, delta: `↑ ${Math.max(0, active - 2)} this week`, type: 'up' },
-    { lbl: 'Pending Review', icon: 'ri-eye-line', val: review, delta: review > 0 ? 'Needs attention' : 'All clear', type: review > 0 ? 'warn' : 'up' },
-    { lbl: 'Published', icon: 'ri-send-plane-line', val: published, delta: '↑ 2 this month', type: 'up' },
-    { lbl: 'Words Written', icon: 'ri-quill-pen-line', val: (words / 1000).toFixed(0) + 'k', delta: '↑ 12k this week', type: 'up' },
-  ];
+
+  // Writers only see their own stats
+  const myDocs = currentRole === 'writer'
+    ? docs.filter(d => d.author === STATE.user.name)
+    : docs;
+  const myActive = myDocs.filter(d => d.status !== 'published').length;
+  const myWords = myDocs.reduce((a, d) => a + (d.words || 0), 0);
+
+  let s;
+  if (currentRole === 'writer') {
+    s = [
+      { lbl: 'My Documents', icon: 'ri-file-edit-line', val: myActive, delta: 'In progress', type: 'up' },
+      { lbl: 'My Words', icon: 'ri-quill-pen-line', val: (myWords / 1000).toFixed(1) + 'k', delta: 'Keep writing!', type: 'up' },
+      { lbl: 'Submitted', icon: 'ri-send-plane-line', val: myDocs.filter(d => d.status === 'review').length, delta: 'Awaiting review', type: 'warn' },
+      { lbl: 'Published', icon: 'ri-send-plane-line', val: myDocs.filter(d => d.status === 'published').length, delta: 'Live stories', type: 'up' },
+    ];
+  } else if (currentRole === 'associate') {
+    s = [
+      { lbl: 'Documents', icon: 'ri-file-text-line', val: docs.length, delta: 'Viewable', type: 'up' },
+      { lbl: 'Published', icon: 'ri-send-plane-line', val: published, delta: 'Live stories', type: 'up' },
+      { lbl: 'My Comments', icon: 'ri-chat-3-line', val: docs.reduce((a, d) => a + (d.comments || []).filter(c => c.author === STATE.user.name).length, 0), delta: 'Posted', type: 'up' },
+      { lbl: 'Team Size', icon: 'ri-team-line', val: 4, delta: 'Active members', type: 'up' },
+    ];
+  } else if (currentRole === 'publisher') {
+    const readyToPublish = docs.filter(d => d.status === 'approved').length;
+    s = [
+      { lbl: 'Ready to Publish', icon: 'ri-rocket-line', val: readyToPublish, delta: readyToPublish > 0 ? 'Needs publishing' : 'All published', type: readyToPublish > 0 ? 'warn' : 'up' },
+      { lbl: 'Published', icon: 'ri-send-plane-line', val: published, delta: '↑ 2 this month', type: 'up' },
+      { lbl: 'In Review', icon: 'ri-eye-line', val: review, delta: 'Being edited', type: 'up' },
+      { lbl: 'Total Docs', icon: 'ri-file-text-line', val: docs.length, delta: 'In workspace', type: 'up' },
+    ];
+  } else {
+    s = [
+      { lbl: 'Active Docs', icon: 'ri-file-edit-line', val: active, delta: `↑ ${Math.max(0, active - 2)} this week`, type: 'up' },
+      { lbl: 'Pending Review', icon: 'ri-eye-line', val: review, delta: review > 0 ? 'Needs attention' : 'All clear', type: review > 0 ? 'warn' : 'up' },
+      { lbl: 'Published', icon: 'ri-send-plane-line', val: published, delta: '↑ 2 this month', type: 'up' },
+      { lbl: 'Words Written', icon: 'ri-quill-pen-line', val: (words / 1000).toFixed(0) + 'k', delta: '↑ 12k this week', type: 'up' },
+    ];
+  }
   $('#stats-grid').html(s.map(x => `<div class="stat-card"><div class="stat-lbl"><i class="ri ${x.icon}"></i>${x.lbl}</div><div class="stat-val">${x.val}</div><div class="stat-delta ${x.type}"><i class="ri ${x.type === 'up' ? 'ri-arrow-up-line' : 'ri-alert-line'}"></i>${x.delta}</div></div>`).join(''));
 }
 
 // ─── DOC GRID ───
 function renderDocGrid() {
-  const docs = STATE.docs.slice(0, 5);
+  // Writers only see their own docs; others see all
+  const visibleDocs = currentRole === 'writer'
+    ? STATE.docs.filter(d => d.author === STATE.user.name)
+    : STATE.docs;
+  const docs = visibleDocs.slice(0, 5);
+
   let h = docs.map(d => `
     <div class="doc-card" data-docid="${d.id}">
       <div class="doc-card-top"><div class="doc-card-title">${d.title}</div>${badgeHtml(d.status)}</div>
       <div class="doc-card-meta"><i class="ri-file-word-line"></i>${(d.words || 0).toLocaleString()} words<i class="ri-time-line"></i>${d.updated}</div>
       <div class="doc-card-foot"><div class="avatar-stack">${avHtml(d.authorInit, 0)}</div><span style="font-size:11px;color:var(--text3)">${d.author.split(' ')[0]}</span></div>
     </div>`).join('');
-  h += `<div class="doc-card new-doc-card" id="new-doc-card-btn"><i class="ri-add-circle-line"></i>New Document</div>`;
+
+  if (can('canCreate')) {
+    h += `<div class="doc-card new-doc-card" id="new-doc-card-btn"><i class="ri-add-circle-line"></i>New Document</div>`;
+  }
   $('#doc-grid').html(h);
   $('#doc-grid').on('click', '.doc-card:not(.new-doc-card)', function () { openDoc($(this).data('docid')); });
   $('#doc-grid').on('contextmenu', '.doc-card:not(.new-doc-card)', function (e) { e.preventDefault(); docCtxMenu($(this).data('docid'), e.pageX, e.pageY); });
@@ -615,10 +501,16 @@ function renderDocGrid() {
 
 // ─── QUEUE LIST ───
 function renderQueueList() {
-  const q = STATE.docs.filter(d => d.status === 'review' || d.status === 'revision');
-  const bgMap = { review: 'var(--sky-ll)', revision: 'var(--blush-ll)' };
-  const clrMap = { review: 'var(--sky)', revision: 'var(--blush)' };
-  const icMap = { review: 'ri-eye-line', revision: 'ri-refresh-line' };
+  let q;
+  if (currentRole === 'publisher') {
+    q = STATE.docs.filter(d => d.status === 'approved');
+  } else {
+    q = STATE.docs.filter(d => d.status === 'review' || d.status === 'revision');
+  }
+
+  const bgMap = { review: 'var(--sky-ll)', revision: 'var(--blush-ll)', approved: 'var(--mint-ll)' };
+  const clrMap = { review: 'var(--sky)', revision: 'var(--blush)', approved: 'var(--mint)' };
+  const icMap = { review: 'ri-eye-line', revision: 'ri-refresh-line', approved: 'ri-checkbox-circle-line' };
   $('#dash-queue-list').html(q.length ? q.map(d => `
     <div class="queue-row" data-docid="${d.id}">
       <div class="queue-icon" style="background:${bgMap[d.status] || 'var(--bg3)'}"><i class="ri ${icMap[d.status] || 'ri-file-line'}" style="color:${clrMap[d.status] || 'var(--text3)'}"></i></div>
@@ -643,11 +535,16 @@ function renderKbGrid() {
 
 // ─── SIDEBAR DOCS ───
 function renderSidebarDocs() {
-  $('#sidebar-docs-list').html(STATE.docs.map(d => `
+  // Writers only see their own docs in sidebar
+  const visibleDocs = currentRole === 'writer'
+    ? STATE.docs.filter(d => d.author === STATE.user.name)
+    : STATE.docs;
+
+  $('#sidebar-docs-list').html(visibleDocs.map(d => `
     <div class="sidebar-doc-item ${STATE.currentDocId === d.id ? 'active' : ''}" data-docid="${d.id}">
       <div class="sdot" style="background:${(SC[d.status] || SC.draft).dot}"></div>
       <div class="sname">${d.title}</div>
-      <button class="smore" data-docid="${d.id}"><i class="ri-more-2-fill"></i></button>
+      ${can('canEdit') || can('canCreate') ? `<button class="smore" data-docid="${d.id}"><i class="ri-more-2-fill"></i></button>` : ''}
     </div>`).join(''));
   $('#sidebar-docs-list').on('click', '.sidebar-doc-item', function (e) {
     if (!$(e.target).closest('.smore').length) openDoc($(this).data('docid'));
@@ -670,19 +567,23 @@ function bindTopbar() {
 function renderProfileDropdown() {
   const u = STATE.user;
   const init = u.initials || (u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase());
+  const role = ROLES.find(r => r.key === currentRole);
   $('#profile-dropdown').html(`
     <div class="profile-card">
       <div class="profile-user">
         <div class="profile-av">${init}</div>
         <div><div class="profile-name">${u.name}</div><div class="profile-email">${u.email}</div><div class="profile-plan">${u.plan || 'Solo'} Plan</div></div>
       </div>
+      <div style="padding:6px 12px 10px;font-size:11px;color:var(--text3)">Role: <strong style="color:var(--peach)">${role ? role.name : 'Unknown'}</strong></div>
       <div class="dropdown-item" id="pd-settings"><i class="ri-settings-3-line"></i> Settings</div>
       <div class="dropdown-item" id="pd-workspace"><i class="ri-building-2-line"></i> Switch Workspace</div>
+      <div class="dropdown-item" id="pd-role"><i class="ri-user-star-line"></i> Switch Role (Demo)</div>
       <div class="dropdown-divider"></div>
       <div class="dropdown-item danger" id="pd-signout"><i class="ri-logout-box-line"></i> Sign Out</div>
     </div>`);
   $('#pd-settings').on('click', () => { $('#profile-dropdown').addClass('hidden'); switchView('settings'); });
   $('#pd-workspace').on('click', () => { $('#profile-dropdown').addClass('hidden'); openWorkspaceSwitcher(); });
+  $('#pd-role').on('click', () => { $('#profile-dropdown').addClass('hidden'); openRoleSwitcher(); });
   $('#pd-signout').on('click', () => { LS.del('onboarded'); location.reload(); });
 }
 
@@ -724,7 +625,15 @@ function bindSidebar() {
     persist();
   });
   $('#workspace-row').on('click', openWorkspaceSwitcher);
-  $(document).on('click', '.nav-item[data-view]', function () { switchView($(this).data('view')); });
+  $(document).on('click', '.nav-item[data-view]', function () {
+    const view = $(this).data('view');
+    // RBAC guard on nav click
+    if (view === 'analytics' && !can('canViewAnalytics')) { toast('error', 'Analytics: Lead Editor or Editor access required.', 'ri-error-warning-line'); return; }
+    if (view === 'teams' && !can('canViewTeams')) { toast('error', 'Team management: Editor access or above required.', 'ri-error-warning-line'); return; }
+    if (view === 'queue' && !can('canViewQueue')) { toast('error', 'Review Queue: not accessible for your role.', 'ri-error-warning-line'); return; }
+    if (view === 'calendar' && !can('canViewCalendar')) { toast('error', 'Calendar not available for your role.', 'ri-error-warning-line'); return; }
+    switchView(view);
+  });
 }
 
 function openWorkspaceSwitcher() {
@@ -739,7 +648,7 @@ function openWorkspaceSwitcher() {
           ${o.slug === STATE.user.orgSlug ? '<i class="ri-check-line" style="color:var(--peach);font-size:18px;margin-left:auto"></i>' : ''}
         </div>`).join('')}
     </div>
-    <button class="btn btn-ghost w-full" style="justify-content:center" id="ws-create-new"><i class="ri-add-line"></i> Create New Workspace</button>
+    ${can('canManageTeam') ? `<button class="btn btn-ghost w-full" style="justify-content:center" id="ws-create-new"><i class="ri-add-line"></i> Create New Workspace</button>` : ''}
     <div class="modal-footer"><button class="btn btn-ghost modal-close">Close</button></div>`, 'modal-sm');
   $('.ws-modal-org').on('click', function () {
     STATE.user.org = $(this).data('name');
@@ -774,40 +683,56 @@ function openNewOrgModal() {
 // ─── VIEW SWITCHING ───
 function switchView(view) {
   STATE.currentView = view;
-  const views = ['dashboard', 'editor', 'queue', 'kb', 'settings'];
+  const views = ['dashboard', 'editor', 'queue', 'kb', 'settings', 'analytics', 'calendar', 'teams'];
   views.forEach(v => $(`#view-${v}`).toggleClass('hidden', v !== view));
   $('.nav-item[data-view]').removeClass('active');
   $(`.nav-item[data-view="${view}"]`).addClass('active');
   if (view === 'kb') renderKbView();
   if (view === 'queue') renderQueueView();
   if (view === 'settings') renderSettingsBody();
+  if (view === 'analytics') renderAnalyticsView();
+  if (view === 'calendar') renderCalendarView();
+  if (view === 'teams') renderTeamsView();
   if (view === 'editor' && !STATE.currentDocId) switchView('dashboard');
+  if (view === 'dashboard') { setTimeout(injectModeWidgetArea, 10); }
 }
 
 // ─── DASHBOARD BINDINGS ───
 function bindDashboard() {
-  $('#btn-new-doc').on('click', openNewDocModal);
-  $('#btn-goto-queue').on('click', () => switchView('queue'));
+  $('#btn-new-doc').on('click', () => {
+    if (!can('canCreate')) { toast('error', 'You do not have permission to create documents.', 'ri-error-warning-line'); return; }
+    openNewDocModal();
+  });
+  $('#btn-goto-queue').on('click', () => {
+    if (!can('canViewQueue')) { toast('error', 'Queue access not available for your role.', 'ri-error-warning-line'); return; }
+    switchView('queue');
+  });
   $('#btn-new-folder').on('click', () => {
+    if (!can('canCreate')) { toast('error', 'You do not have permission to create folders.', 'ri-error-warning-line'); return; }
     openPromptModal('New Folder', 'ri-folder-add-line', 'Folder Name', 'Enter folder name', (fn) => {
-      $('#ws-folders').append(`<div class="sidebar-doc-item"><div class="sdot" style="background:var(--lemon)"></div><div class="sname">${fn}</div></div>`);
       toast('success', `Folder "${fn}" created`);
     });
   });
   $('#btn-view-all-docs').on('click', openAllDocsModal);
-  $('#btn-new-article').on('click', openNewArticleModal);
+  $('#btn-new-article').on('click', () => {
+    if (!can('canManageKB')) { toast('error', 'Only Editors and Lead Editors can create KB articles.', 'ri-error-warning-line'); return; }
+    openNewArticleModal();
+  });
   $('#btn-search-kb').on('click', () => {
-    openCommandPalette();
+    openCmd();
     $('#cmd-input').val('Search KB: ').focus();
   });
 }
 
 function openAllDocsModal() {
+  const visibleDocs = currentRole === 'writer'
+    ? STATE.docs.filter(d => d.author === STATE.user.name)
+    : STATE.docs;
   openModal(`
     <button class="modal-close"><i class="ri-close-line"></i></button>
     <div class="modal-title"><i class="ri-files-line"></i> All Documents</div>
     <div style="max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;margin-top:12px">
-      ${STATE.docs.map(d => `
+      ${visibleDocs.map(d => `
         <div class="all-doc-row" data-docid="${d.id}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:background .14s">
           <div style="width:8px;height:8px;border-radius:50%;background:${(SC[d.status] || SC.draft).dot};flex-shrink:0"></div>
           <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</div><div style="font-size:11px;color:var(--text3)"><i class="ri-user-3-line"></i>${d.author} · <i class="ri-time-line"></i>${d.updated}</div></div>
@@ -843,6 +768,7 @@ const TEMPLATES = {
   interview: '<p><strong>Subject:</strong> [Name, Title, Organisation]<br><strong>Date:</strong> [Date]<br><strong>Location:</strong> [Location/Remote]</p><hr><h3>Q: [First question]</h3><p><strong>A:</strong> [Answer]</p><h3>Q: [Second question]</h3><p><strong>A:</strong> [Answer]</p>',
 };
 function openNewDocModal() {
+  if (!can('canCreate')) { toast('error', 'You do not have permission to create documents.', 'ri-error-warning-line'); return; }
   openModal(`
     <button class="modal-close"><i class="ri-close-line"></i></button>
     <div class="modal-title"><i class="ri-add-circle-line" style="color:var(--peach)"></i> New Document</div>
@@ -869,6 +795,7 @@ function openNewDocModal() {
   $('#nd-title').on('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('#nd-create').trigger('click'); } });
 }
 function createDoc(title, content = '<p></p>') {
+  if (!can('canCreate')) { toast('error', 'Permission denied.', 'ri-error-warning-line'); return; }
   const id = 'd' + Date.now();
   const doc = {
     id, title, status: 'draft', words: countWords(content), author: STATE.user.name,
@@ -883,19 +810,50 @@ function createDoc(title, content = '<p></p>') {
 
 // ─── DOC CONTEXT MENU ───
 function docCtxMenu(docId, x, y) {
-  showCtxMenu([
-    { icon: 'ri-eye-line', label: 'Open', action: () => openDoc(docId) },
-    { icon: 'ri-pencil-line', label: 'Rename', action: () => renameDocModal(docId) },
-    { icon: 'ri-file-copy-line', label: 'Duplicate', action: () => duplicateDoc(docId) },
-    '-',
-    { icon: 'ri-send-plane-line', label: 'Submit for Review', action: () => { setDocStatus(docId, 'review'); toast('success', 'Submitted for review!', 'ri-send-plane-line'); } },
-    { icon: 'ri-checkbox-circle-line', label: 'Mark Approved', action: () => { setDocStatus(docId, 'approved'); toast('success', 'Marked as approved!', 'ri-checkbox-circle-line'); } },
-    '-',
-    { icon: 'ri-delete-bin-line', label: 'Delete', danger: true, action: () => deleteDocConfirm(docId) },
-  ], x, y);
+  const doc = STATE.docs.find(d => d.id === docId); if (!doc) return;
+  // Writers can only edit their own docs
+  const isOwnDoc = doc.author === STATE.user.name;
+
+  const menu = [{ icon: 'ri-eye-line', label: 'Open', action: () => openDoc(docId) }];
+
+  if (can('canEdit') && (currentRole !== 'writer' || isOwnDoc)) {
+    menu.push({ icon: 'ri-pencil-line', label: 'Rename', action: () => renameDocModal(docId) });
+    menu.push({ icon: 'ri-file-copy-line', label: 'Duplicate', action: () => duplicateDoc(docId) });
+  }
+
+  if (can('canSubmitForReview') && (currentRole !== 'writer' || isOwnDoc)) {
+    if (doc.status === 'draft' || doc.status === 'revision') {
+      menu.push('-');
+      menu.push({ icon: 'ri-send-plane-line', label: 'Submit for Review', action: () => { setDocStatus(docId, 'review'); toast('success', 'Submitted for review!', 'ri-send-plane-line'); } });
+    }
+  }
+
+  if (can('canRequestRevision') && doc.status === 'review') {
+    if (!menu.some(m => m === '-')) menu.push('-');
+    menu.push({ icon: 'ri-refresh-line', label: 'Request Revision', action: () => { setDocStatus(docId, 'revision'); toast('warn', 'Revision requested.', 'ri-refresh-line'); } });
+  }
+
+  if (can('canApprove') && doc.status === 'review') {
+    if (!menu.some(m => m === '-')) menu.push('-');
+    menu.push({ icon: 'ri-checkbox-circle-line', label: 'Mark Approved', action: () => { setDocStatus(docId, 'approved'); toast('success', 'Marked as approved!', 'ri-checkbox-circle-line'); } });
+  }
+
+  if (can('canPublish') && doc.status === 'approved') {
+    if (!menu.some(m => m === '-')) menu.push('-');
+    menu.push({ icon: 'ri-rocket-line', label: 'Publish', action: () => { setDocStatus(docId, 'published'); toast('success', 'Document published!', 'ri-rocket-line'); } });
+  }
+
+  if (can('canDelete') && (currentRole !== 'writer' || isOwnDoc)) {
+    menu.push('-');
+    menu.push({ icon: 'ri-delete-bin-line', label: 'Delete', danger: true, action: () => deleteDocConfirm(docId) });
+  }
+
+  showCtxMenu(menu, x, y);
 }
 function renameDocModal(docId) {
+  if (!can('canEdit')) { toast('error', 'You do not have permission to rename documents.', 'ri-error-warning-line'); return; }
   const doc = STATE.docs.find(d => d.id === docId); if (!doc) return;
+  if (currentRole === 'writer' && doc.author !== STATE.user.name) { toast('error', 'You can only rename your own documents.', 'ri-error-warning-line'); return; }
   openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
     <div class="modal-title"><i class="ri-pencil-line"></i> Rename Document</div>
     <div class="form-group"><input class="form-input" id="rename-val" value="${doc.title}"></div>
@@ -909,13 +867,15 @@ function renameDocModal(docId) {
   });
 }
 function duplicateDoc(docId) {
+  if (!can('canCreate')) { toast('error', 'You do not have permission to duplicate documents.', 'ri-error-warning-line'); return; }
   const doc = STATE.docs.find(d => d.id === docId); if (!doc) return;
-  const dup = { ...JSON.parse(JSON.stringify(doc)), id: 'd' + Date.now(), title: doc.title + ' (Copy)', updated: 'Just now', status: 'draft' };
+  const dup = { ...JSON.parse(JSON.stringify(doc)), id: 'd' + Date.now(), title: doc.title + ' (Copy)', updated: 'Just now', status: 'draft', author: STATE.user.name, authorInit: STATE.user.initials };
   STATE.docs.splice(STATE.docs.indexOf(doc) + 1, 0, dup);
   persist(); renderDocGrid(); renderSidebarDocs(); renderStats();
   toast('success', 'Duplicated!', 'ri-file-copy-line');
 }
 function deleteDocConfirm(docId) {
+  if (!can('canDelete')) { toast('error', 'You do not have permission to delete documents.', 'ri-error-warning-line'); return; }
   openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
     <div class="modal-title" style="color:var(--blush)"><i class="ri-delete-bin-line"></i> Delete Document</div>
     <div class="modal-sub">This will permanently delete this document. This cannot be undone.</div>
@@ -939,13 +899,44 @@ function openDoc(docId) {
   const doc = STATE.docs.find(d => d.id === docId); if (!doc) return;
   STATE.currentDocId = docId;
   switchView('editor');
+
+  // Determine if user can actually edit this doc
+  const isOwnDoc = doc.author === STATE.user.name;
+  const editAllowed = can('canEdit') && (currentRole !== 'writer' || isOwnDoc);
+
   $('#doc-title').val(doc.title).css('height', 'auto').css('height', $('#doc-title')[0].scrollHeight + 'px');
-  $('#doc-content').html(doc.content || '<p></p>');
+  $('#doc-content').html(doc.content || '<p></p>').attr('contenteditable', editAllowed ? 'true' : 'false');
+
+  if (editAllowed) {
+    $('.editor-topbar .tb-btn:not(#btn-back-dash):not(#tb-ai):not(#btn-toggle-panel)').prop('disabled', false).removeClass('tb-disabled');
+    $('#heading-select').prop('disabled', false);
+    $('#doc-title').removeAttr('readonly');
+    $('#btn-submit-review').toggle(can('canSubmitForReview'));
+  } else {
+    // Disable all formatting buttons
+    $('.editor-topbar .tb-btn:not(#btn-back-dash):not(#tb-ai):not(#btn-toggle-panel):not(#btn-focus-mode):not(#btn-export-doc)').prop('disabled', true).addClass('tb-disabled');
+    $('#heading-select').prop('disabled', true);
+    $('#doc-title').attr('readonly', 'readonly');
+    $('#btn-submit-review').hide();
+  }
+
+  // Show read-only indicator
+  $('#editor-readonly-badge').remove();
+  if (!editAllowed) {
+    $('<span id="editor-readonly-badge" style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--bg3);color:var(--text3);border:1px solid var(--border);margin-left:4px"><i class="ri-eye-line"></i> Read-only</span>').insertAfter('#doc-badge-container');
+  }
+
   $('#meta-author-name').text(doc.author);
   $('#meta-date-val').text(doc.updated === 'Just now' ? 'Today' : doc.updated);
-  $('#wf-deadline').val(doc.deadline || '');
+  $('#wf-deadline').val(doc.deadline || '').prop('disabled', !can('canEdit'));
   $('#wf-assignee').text(doc.assignee || doc.author);
   $('#wf-assignee-av').text((doc.assignee || doc.author).split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase());
+
+  // Show/hide workflow action buttons by role
+  $('#wf-submit-btn').toggle(can('canSubmitForReview') && (currentRole !== 'writer' || isOwnDoc));
+  $('#wf-delete-btn').toggle(can('canDelete') && (currentRole !== 'writer' || isOwnDoc));
+  $('#wf-reassign-btn').toggle(can('canManageTeam'));
+
   const mi = { writer: 'Writer Mode', journalism: 'Journalism Mode', legal: 'Legal Mode' };
   const ii = { writer: 'ri-edit-2-line', journalism: 'ri-newspaper-line', legal: 'ri-scales-line' };
   $('#meta-mode').html(`<i class="ri ${ii[doc.mode] || 'ri-edit-2-line'}"></i> ${mi[doc.mode] || 'Writer Mode'}`);
@@ -954,7 +945,10 @@ function openDoc(docId) {
   renderCommentsPane(doc);
   updateWc();
   renderSidebarDocs();
-  // colab avatars
+
+  // Comment input: all roles that canComment
+  $('#new-comment-input,#add-comment-btn').toggle(can('canComment'));
+
   $('#colab-avatars').html([{ init: 'SP', i: 1 }, { init: 'JL', i: 2 }].map(a => `<div class="av-sm" style="width:24px;height:24px;font-size:9px;background:${AGCS[a.i % AGCS.length]};margin-right:-6px;border:1.5px solid var(--card)">${a.init}</div>`).join(''));
 }
 function renderDocBadge(doc) {
@@ -970,19 +964,39 @@ function renderWorkflowPane(doc) {
     { key: 'approved', label: 'Approved', desc: 'Ready to publish', dot: '#10B981' },
     { key: 'published', label: 'Published', desc: 'Live', dot: '#A855F7' },
   ];
-  $('#workflow-states-list').html(states.map(st => `
-    <div class="wf-state-item ${doc.status === st.key ? 'current' : ''}" data-wfstate="${st.key}">
-      <div class="wf-dot" style="background:${st.dot}"></div>
-      <div class="wf-info"><div class="wf-state-name">${st.label}</div><div class="wf-state-desc">${st.desc}</div></div>
-      ${doc.status === st.key ? '<i class="ri-record-circle-line wf-cur-icon"></i>' : ''}
-    </div>`).join(''));
-  $('#workflow-states-list').on('click', '.wf-state-item', function () {
-    setDocStatus(STATE.currentDocId, $(this).data('wfstate'));
+
+  // Which states can each role set?
+  const allowedTransitions = {
+    lead: ['idea', 'draft', 'review', 'revision', 'approved', 'published'],
+    editor: ['idea', 'draft', 'review', 'revision', 'approved'],
+    reviewer: ['revision'], // can only request revision
+    writer: doc.author === STATE.user.name ? ['review'] : [], // can submit own docs
+    publisher: ['published'],
+    associate: [],
+  };
+  const allowed = allowedTransitions[currentRole] || [];
+
+  $('#workflow-states-list').html(states.map(st => {
+    const clickable = allowed.includes(st.key) && st.key !== doc.status;
+    return `
+      <div class="wf-state-item ${doc.status === st.key ? 'current' : ''} ${clickable ? '' : 'wf-disabled'}" data-wfstate="${st.key}" style="${clickable ? 'cursor:pointer' : 'cursor:default;opacity:' + (doc.status === st.key ? '1' : '0.45')}">
+        <div class="wf-dot" style="background:${st.dot}"></div>
+        <div class="wf-info"><div class="wf-state-name">${st.label}</div><div class="wf-state-desc">${st.desc}</div></div>
+        ${doc.status === st.key ? '<i class="ri-record-circle-line wf-cur-icon"></i>' : ''}
+        ${clickable ? '<i class="ri-arrow-right-line" style="color:var(--text3);font-size:12px;margin-left:auto"></i>' : ''}
+      </div>`;
+  }).join(''));
+
+  $('#workflow-states-list').on('click', '.wf-state-item:not(.wf-disabled)', function () {
+    const newState = $(this).data('wfstate');
+    if (!allowed.includes(newState)) { toast('error', 'Your role cannot set this status.', 'ri-error-warning-line'); return; }
+    setDocStatus(STATE.currentDocId, newState);
     toast('success', `Status: ${$(this).find('.wf-state-name').text()}`, 'ri-git-branch-line');
   });
 }
 function renderCommentsPane(doc) {
   const cs = doc.comments || [];
+  const canResolve = can('canReview') || can('canEdit');
   $('#comments-list').html(cs.length ? cs.map(c => `
     <div class="comment-card ${c.resolved ? 'resolved' : ''}" data-cid="${c.id}">
       <div class="comment-head">
@@ -992,11 +1006,13 @@ function renderCommentsPane(doc) {
       </div>
       <div class="comment-text">${c.text}</div>
       <div class="comment-footer">
-        ${!c.resolved ? `<button class="comment-action resolve" data-cid="${c.id}"><i class="ri-check-line"></i> Resolve</button>` : '<span style="font-size:11px;color:var(--text3)"><i class="ri-check-double-line"></i> Resolved</span>'}
-        <button class="comment-action"><i class="ri-reply-line"></i> Reply</button>
+        ${!c.resolved && canResolve ? `<button class="comment-action resolve" data-cid="${c.id}"><i class="ri-check-line"></i> Resolve</button>` : ''}
+        ${c.resolved ? '<span style="font-size:11px;color:var(--text3)"><i class="ri-check-double-line"></i> Resolved</span>' : ''}
+        ${can('canComment') ? `<button class="comment-action"><i class="ri-reply-line"></i> Reply</button>` : ''}
       </div>
     </div>`).join('') : '<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px"><i class="ri-chat-3-line" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4"></i>No comments yet</div>');
   $('#comments-list').on('click', '.comment-action.resolve', function () {
+    if (!canResolve) { toast('error', 'You cannot resolve comments.', 'ri-error-warning-line'); return; }
     const cid = $(this).data('cid');
     const doc = STATE.docs.find(d => d.id === STATE.currentDocId);
     const c = (doc.comments || []).find(x => x.id === cid);
@@ -1006,49 +1022,56 @@ function renderCommentsPane(doc) {
 
 function bindEditor() {
   $('#doc-title').on('input', function () {
+    if (!can('canEdit')) return;
     this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';
     const doc = STATE.docs.find(d => d.id === STATE.currentDocId);
     if (doc) { doc.title = $(this).val() || 'Untitled'; doc.updated = 'Just now'; triggerSave(); }
     renderSidebarDocs();
   });
   $('#doc-content').on('input', function () {
+    if (!can('canEdit')) return;
     updateWc();
     const doc = STATE.docs.find(d => d.id === STATE.currentDocId);
     if (doc) { doc.content = $(this).html(); doc.words = countWords($(this).text()); doc.updated = 'Just now'; }
     triggerSave();
   });
-  // Toolbar
-  $('#tb-bold').on('click', () => fmt('bold'));
-  $('#tb-italic').on('click', () => fmt('italic'));
-  $('#tb-underline').on('click', () => fmt('underline'));
-  $('#tb-strike').on('click', () => fmt('strikeThrough'));
-  $('#tb-ul').on('click', () => fmt('insertUnorderedList'));
-  $('#tb-ol').on('click', () => fmt('insertOrderedList'));
-  $('#tb-quote').on('click', () => { document.execCommand('formatBlock', false, 'blockquote'); });
-  $('#tb-code').on('click', () => {
+  // Toolbar — all guard on canEdit
+  const editGuard = (fn) => () => { if (!can('canEdit')) { toast('error', 'Read-only: your role cannot edit documents.', 'ri-error-warning-line'); return; } fn(); };
+  $('#tb-bold').on('click', editGuard(() => fmt('bold')));
+  $('#tb-italic').on('click', editGuard(() => fmt('italic')));
+  $('#tb-underline').on('click', editGuard(() => fmt('underline')));
+  $('#tb-strike').on('click', editGuard(() => fmt('strikeThrough')));
+  $('#tb-ul').on('click', editGuard(() => fmt('insertUnorderedList')));
+  $('#tb-ol').on('click', editGuard(() => fmt('insertOrderedList')));
+  $('#tb-quote').on('click', editGuard(() => { document.execCommand('formatBlock', false, 'blockquote'); }));
+  $('#tb-code').on('click', editGuard(() => {
     const sel = window.getSelection();
-    sel && sel.toString()
-      ? document.execCommand('insertHTML', false, `<code>${sel}</code>`)
-      : document.execCommand('insertHTML', false, '<code>code</code>');
-  });
-  $('#tb-hr').on('click', () => document.execCommand('insertHTML', false, '<hr>'));
-  $('#tb-link').on('click', () => {
+    sel && sel.toString() ? document.execCommand('insertHTML', false, `<code>${sel}</code>`) : document.execCommand('insertHTML', false, '<code>code</code>');
+  }));
+  $('#tb-hr').on('click', editGuard(() => document.execCommand('insertHTML', false, '<hr>')));
+  $('#tb-link').on('click', editGuard(() => {
     openPromptModal('Insert Link', 'ri-link', 'URL', 'https://example.com', (u) => {
       document.execCommand('createLink', false, u.startsWith('http') ? u : 'https://' + u);
       $('#doc-content').trigger('focus');
     });
-  });
-  $('#tb-align-l').on('click', () => fmt('justifyLeft'));
-  $('#tb-align-c').on('click', () => fmt('justifyCenter'));
-  $('#tb-align-r').on('click', () => fmt('justifyRight'));
-  $('#tb-undo').on('click', () => document.execCommand('undo'));
-  $('#tb-redo').on('click', () => document.execCommand('redo'));
+  }));
+  $('#tb-align-l').on('click', editGuard(() => fmt('justifyLeft')));
+  $('#tb-align-c').on('click', editGuard(() => fmt('justifyCenter')));
+  $('#tb-align-r').on('click', editGuard(() => fmt('justifyRight')));
+  $('#tb-undo').on('click', editGuard(() => document.execCommand('undo')));
+  $('#tb-redo').on('click', editGuard(() => document.execCommand('redo')));
   $('#tb-ai').on('click', () => { openPanelTab('ai'); if (!STATE.panelOpen) togglePanel(); });
-  $('#heading-select').on('change', function () { document.execCommand('formatBlock', false, $(this).val()); $('#doc-content').trigger('focus'); });
+  $('#heading-select').on('change', function () {
+    if (!can('canEdit')) return;
+    document.execCommand('formatBlock', false, $(this).val()); $('#doc-content').trigger('focus');
+  });
   $('#doc-content').on('keyup mouseup', updateTbState);
   $('#btn-back-dash').on('click', () => switchView('dashboard'));
   $('#btn-submit-review,#wf-submit-btn').on('click', () => {
     if (!STATE.currentDocId) return;
+    if (!can('canSubmitForReview')) { toast('error', 'Your role cannot submit documents for review.', 'ri-error-warning-line'); return; }
+    const doc = STATE.docs.find(d => d.id === STATE.currentDocId);
+    if (currentRole === 'writer' && doc && doc.author !== STATE.user.name) { toast('error', 'You can only submit your own documents.', 'ri-error-warning-line'); return; }
     setDocStatus(STATE.currentDocId, 'review');
     const n = { id: 'n' + Date.now(), icon: 'ri-send-plane-line', iconBg: 'sky-ll', iconColor: 'sky', title: 'Submitted for review', body: `"${$('#doc-title').val()}" submitted for review.`, time: 'Just now', unread: true };
     STATE.notifs.unshift(n); persist(); renderNotifPanel();
@@ -1068,7 +1091,10 @@ function bindEditor() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = doc.title + '.txt'; a.click();
     toast('success', 'Exported!', 'ri-download-line');
   });
-  $('#wf-delete-btn').on('click', () => { if (STATE.currentDocId) deleteDocConfirm(STATE.currentDocId); });
+  $('#wf-delete-btn').on('click', () => {
+    if (!can('canDelete')) { toast('error', 'Your role cannot delete documents.', 'ri-error-warning-line'); return; }
+    if (STATE.currentDocId) deleteDocConfirm(STATE.currentDocId);
+  });
   $('#wf-version-btn').on('click', () => {
     openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
       <div class="modal-title"><i class="ri-history-line"></i> Version History</div>
@@ -1077,11 +1103,12 @@ function bindEditor() {
           <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1px solid ${i === 0 ? 'var(--peach)' : 'var(--border)'};background:${i === 0 ? 'var(--peach-ll)' : 'var(--card)'}">
             <i class="ri-${i === 0 ? 'record-circle-fill' : 'circle-line'}" style="color:var(--peach)"></i>
             <span style="flex:1;font-size:13px;font-weight:${i === 0 ? '600' : '400'}">${v}</span>
-            ${i > 0 ? `<button class="btn btn-sm btn-ghost" onclick="toast('info','Version restored!','ri-history-line');closeModal()"><i class="ri-arrow-go-back-line"></i> Restore</button>` : ''}
+            ${i > 0 && can('canEdit') ? `<button class="btn btn-sm btn-ghost" onclick="toast('info','Version restored!','ri-history-line');closeModal()"><i class="ri-arrow-go-back-line"></i> Restore</button>` : ''}
           </div>`).join('')}
       </div>`);
   });
   $('#wf-reassign-btn').on('click', () => {
+    if (!can('canManageTeam')) { toast('error', 'Your role cannot reassign documents.', 'ri-error-warning-line'); return; }
     const members = ['Ayushi Upadhyay', 'Sam Park', 'Jordan Lee', 'Casey Morgan'];
     openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
       <div class="modal-title"><i class="ri-user-add-line"></i> Reassign Document</div>
@@ -1098,6 +1125,7 @@ function bindEditor() {
     });
   });
   $('#wf-deadline').on('change', function () {
+    if (!can('canEdit')) return;
     const doc = STATE.docs.find(d => d.id === STATE.currentDocId);
     if (doc) { doc.deadline = $(this).val(); persist(); toast('info', 'Deadline saved!', 'ri-calendar-check-line'); }
   });
@@ -1105,6 +1133,7 @@ function bindEditor() {
   $('#new-comment-input').on('keydown', function (e) { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') postComment(); });
 }
 function postComment() {
+  if (!can('canComment')) { toast('error', 'Your role cannot post comments.', 'ri-error-warning-line'); return; }
   const text = $('#new-comment-input').val().trim(); if (!text) return;
   const doc = STATE.docs.find(d => d.id === STATE.currentDocId); if (!doc) return;
   const init = STATE.user.initials || STATE.user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -1232,33 +1261,74 @@ function pinSrc(t) { toast('info', `"${t.slice(0, 30)}…" pinned`, 'ri-pushpin-
 
 // ─── VIEWS: QUEUE, KB, SETTINGS ───
 function renderQueueView() {
-  const q = STATE.docs.filter(d => d.status === 'review' || d.status === 'revision');
+  let q;
+  if (currentRole === 'publisher') {
+    // Publishers only see approved docs, ready to publish
+    q = STATE.docs.filter(d => d.status === 'approved');
+  } else if (currentRole === 'reviewer') {
+    // Reviewers see docs in review
+    q = STATE.docs.filter(d => d.status === 'review');
+  } else {
+    // Editors/Lead see review, revision, approved
+    q = STATE.docs.filter(d => d.status === 'review' || d.status === 'revision' || d.status === 'approved');
+  }
+
   $('#queue-body').html(q.length ? q.map(d => `
     <div class="queue-card" data-docid="${d.id}">
       <div class="queue-card-top"><div class="queue-card-title">${d.title}</div>${badgeHtml(d.status)}</div>
       <div class="queue-card-meta"><i class="ri-user-3-line"></i>${d.author}<i class="ri-time-line"></i>${d.updated}${d.deadline ? `<i class="ri-calendar-line"></i>${d.deadline}` : ''}</div>
       <div class="queue-card-actions">
-        <button class="btn btn-sm btn-primary" data-qa="open" data-docid="${d.id}"><i class="ri-eye-line"></i> Review</button>
-        ${d.status === 'review'
-      ? `<button class="btn btn-sm btn-success" data-qa="approve" data-docid="${d.id}"><i class="ri-checkbox-circle-line"></i> Approve</button>
-            <button class="btn btn-sm btn-danger" data-qa="revise" data-docid="${d.id}"><i class="ri-close-circle-line"></i> Request Revision</button>`
-      : `<button class="btn btn-sm btn-ghost" data-qa="open" data-docid="${d.id}"><i class="ri-pencil-line"></i> Open</button>`}
+        <button class="btn btn-sm btn-primary" data-qa="open" data-docid="${d.id}"><i class="ri-eye-line"></i> Open</button>
+        ${d.status === 'review' && can('canApprove')
+      ? `<button class="btn btn-sm btn-success" data-qa="approve" data-docid="${d.id}"><i class="ri-checkbox-circle-line"></i> Approve</button>`
+      : ''}
+        ${d.status === 'review' && can('canRequestRevision')
+      ? `<button class="btn btn-sm btn-danger" data-qa="revise" data-docid="${d.id}"><i class="ri-close-circle-line"></i> Request Revision</button>`
+      : ''}
+        ${d.status === 'approved' && can('canPublish')
+      ? `<button class="btn btn-sm btn-success" data-qa="publish" data-docid="${d.id}"><i class="ri-rocket-line"></i> Publish</button>`
+      : ''}
       </div>
-    </div>`).join('') : '<div style="text-align:center;color:var(--text3);padding:40px 20px"><i class="ri-checkbox-circle-line" style="font-size:36px;display:block;margin-bottom:10px;color:var(--mint)"></i><div style="font-size:15px;font-weight:600;margin-bottom:4px">Queue is empty</div><div style="font-size:13px">All documents are up to date.</div></div>');
-  $('#queue-body').on('click', '[data-qa="open"]', function () { openDoc($(this).data('docid')); });
-  $('#queue-body').on('click', '[data-qa="approve"]', function () { setDocStatus($(this).data('docid'), 'approved'); renderQueueView(); toast('success', 'Approved!', 'ri-checkbox-circle-line'); });
-  $('#queue-body').on('click', '[data-qa="revise"]', function () { setDocStatus($(this).data('docid'), 'revision'); renderQueueView(); toast('warn', 'Revision requested.', 'ri-refresh-line'); });
+    </div>`).join('') : `<div style="text-align:center;color:var(--text3);padding:40px 20px">
+      <i class="ri-checkbox-circle-line" style="font-size:36px;display:block;margin-bottom:10px;color:var(--mint)"></i>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">
+        ${currentRole === 'publisher' ? 'No approved documents to publish yet.' : 'Queue is empty — great work!'}
+      </div>
+      <div style="font-size:13px">${currentRole === 'publisher' ? 'Wait for editors to approve documents.' : 'All documents are up to date.'}</div>
+    </div>`);
+  $('#queue-body').off('click', '[data-qa]').on('click', '[data-qa="open"]', function () { openDoc($(this).data('docid')); });
+  $('#queue-body').on('click', '[data-qa="approve"]', function () {
+    if (!can('canApprove')) { toast('error', 'Your role cannot approve documents.', 'ri-error-warning-line'); return; }
+    setDocStatus($(this).data('docid'), 'approved'); renderQueueView(); toast('success', 'Approved!', 'ri-checkbox-circle-line');
+  });
+  $('#queue-body').on('click', '[data-qa="revise"]', function () {
+    if (!can('canRequestRevision')) { toast('error', 'Your role cannot request revisions.', 'ri-error-warning-line'); return; }
+    setDocStatus($(this).data('docid'), 'revision'); renderQueueView(); toast('warn', 'Revision requested.', 'ri-refresh-line');
+  });
+  $('#queue-body').on('click', '[data-qa="publish"]', function () {
+    if (!can('canPublish')) { toast('error', 'Your role cannot publish documents.', 'ri-error-warning-line'); return; }
+    setDocStatus($(this).data('docid'), 'published'); renderQueueView(); toast('success', 'Document published!', 'ri-rocket-line');
+  });
 }
 function renderKbView() {
+  const canManage = can('canManageKB');
   $('#kb-article-list').html(STATE.kb.map(k => `
     <div class="kb-article-row" data-kbid="${k.id}">
       <div class="kb-article-icon" style="background:color-mix(in srgb,var(--${k.color}) 12%,transparent)"><i class="ri ${k.icon}" style="color:var(--${k.color})"></i></div>
       <div style="flex:1;min-width:0"><div class="kb-article-title">${k.title}</div><div class="kb-article-meta"><i class="ri-folder-line"></i>${k.category}<span style="margin:0 6px">·</span><i class="ri-time-line"></i>Updated ${k.updated}</div></div>
-      <button class="btn btn-sm btn-ghost" style="flex-shrink:0" onclick="toast('info','Opening…','ri-book-2-line')"><i class="ri-pencil-line"></i> Edit</button>
+      ${canManage ? `<button class="btn btn-sm btn-ghost" style="flex-shrink:0" onclick="toast('info','Opening…','ri-book-2-line')"><i class="ri-pencil-line"></i> Edit</button>` : `<span style="font-size:11px;color:var(--text3);flex-shrink:0"><i class="ri-eye-line"></i> View only</span>`}
     </div>`).join(''));
+
+  // Show/hide new article button based on permission
+  if (!can('canManageKB')) {
+    $('#btn-new-article').hide();
+  } else {
+    $('#btn-new-article').show();
+  }
 }
 function renderSettingsBody() {
   const u = STATE.user;
+  const canManage = can('canManageSettings');
   const init = u.initials || (u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase());
   $('#settings-body').html(`
     <div class="settings-section">
@@ -1276,6 +1346,7 @@ function renderSettingsBody() {
         <button class="btn btn-sm btn-ghost"><i class="ri-lock-line"></i> Change</button>
       </div>
     </div>
+    ${can('canManageTeam') ? `
     <div class="settings-section">
       <div class="settings-section-title"><i class="ri-building-2-line"></i> Workspace</div>
       <div class="settings-row">
@@ -1290,7 +1361,7 @@ function renderSettingsBody() {
         <div class="settings-row-info"><div class="settings-row-label">Plan</div><div class="settings-row-desc" style="color:var(--peach);font-weight:600">${u.plan} Plan</div></div>
         <button class="btn btn-sm btn-primary"><i class="ri-vip-crown-line"></i> Upgrade</button>
       </div>
-    </div>
+    </div>` : ''}
     <div class="settings-section">
       <div class="settings-section-title"><i class="ri-palette-line"></i> Preferences</div>
       <div class="settings-row">
@@ -1317,18 +1388,19 @@ function renderSettingsBody() {
         <div class="toggle-switch ${u.emailNotifs !== false ? 'on' : ''}" id="st-notif-toggle"><div class="toggle-thumb"></div></div>
       </div>
     </div>
+    ${can('canViewTeams') ? `
     <div class="settings-section">
       <div class="settings-section-title"><i class="ri-team-line"></i> Team Members</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-        ${[{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', r: 'Owner', init: 'AU', i: 0 }, { n: 'Sam Park', e: 'sam@citybeat.com', r: 'Editor', init: 'SP', i: 1 }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', r: 'Writer', init: 'JL', i: 2 }, { n: 'Casey Morgan', e: 'casey@citybeat.com', r: 'Writer', init: 'CM', i: 3 }].map(m => `
+        ${[{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', r: 'Lead Editor', init: 'AU', i: 0 }, { n: 'Sam Park', e: 'sam@citybeat.com', r: 'Editor', init: 'SP', i: 1 }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', r: 'Reviewer', init: 'JL', i: 2 }, { n: 'Casey Morgan', e: 'casey@citybeat.com', r: 'Writer', init: 'CM', i: 3 }].map(m => `
           <div style="display:flex;align-items:center;gap:10px">
             <div class="av-sm" style="width:32px;height:32px;font-size:12px;background:${AGCS[m.i % AGCS.length]};margin-right:0;flex-shrink:0">${m.init}</div>
             <div style="flex:1"><div style="font-size:13px;font-weight:600">${m.n}</div><div style="font-size:11px;color:var(--text3)">${m.e}</div></div>
-            <span class="badge ${m.r === 'Owner' ? 'badge-published' : m.r === 'Editor' ? 'badge-approved' : 'badge-draft'}">${m.r}</span>
+            <span class="badge badge-draft">${m.r}</span>
           </div>`).join('')}
       </div>
-      <button class="btn btn-ghost btn-sm" style="justify-content:center;width:100%" id="st-invite"><i class="ri-user-add-line"></i> Invite Member</button>
-    </div>
+      ${can('canManageTeam') ? `<button class="btn btn-ghost btn-sm" style="justify-content:center;width:100%" id="st-invite"><i class="ri-user-add-line"></i> Invite Member</button>` : ''}
+    </div>` : ''}
     <div class="settings-section">
       <div class="settings-section-title"><i class="ri-shield-user-line"></i> Danger Zone</div>
       <div class="settings-row">
@@ -1370,6 +1442,7 @@ function renderSettingsBody() {
     });
   });
   $('#st-edit-org').on('click', () => {
+    if (!can('canManageTeam')) { toast('error', 'Only Lead Editors can edit workspace settings.', 'ri-error-warning-line'); return; }
     openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
       <div class="modal-title"><i class="ri-building-2-line"></i> Edit Workspace Name</div>
       <div class="form-group"><input class="form-input" id="st-org-val" value="${STATE.user.org}"></div>
@@ -1379,7 +1452,10 @@ function renderSettingsBody() {
       toast('success', 'Workspace updated!', 'ri-building-2-line');
     });
   });
-  $('#st-invite').on('click', () => openInviteModal());
+  $('#st-invite').on('click', () => {
+    if (!can('canManageTeam')) { toast('error', 'Only Lead Editors can invite members.', 'ri-error-warning-line'); return; }
+    openInviteModal();
+  });
   $('#st-delete-acc').on('click', () => {
     openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
       <div class="modal-title" style="color:var(--blush)"><i class="ri-alert-line"></i> Delete Account</div>
@@ -1397,11 +1473,12 @@ function renderSettingsBody() {
 }
 
 function openInviteModal() {
+  if (!can('canManageTeam')) { toast('error', 'Only Lead Editors can invite members.', 'ri-error-warning-line'); return; }
   openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
     <div class="modal-title"><i class="ri-user-add-line"></i> Invite Team Member</div>
     <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="inv-email" type="email" placeholder="colleague@example.com"></div>
     <div class="form-group"><label class="form-label">Role</label>
-      <select class="form-select" id="inv-role"><option>Viewer</option><option selected>Writer</option><option>Editor</option><option>Admin</option></select>
+      <select class="form-select" id="inv-role"><option>Viewer</option><option selected>Writer</option><option>Reviewer</option><option>Editor</option><option>Publisher</option><option>Lead Editor</option></select>
     </div>
     <div style="display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--bg3);border-radius:10px;margin-bottom:4px;font-size:12px">
       <i class="ri-link" style="color:var(--text3)"></i>
@@ -1419,11 +1496,7 @@ function openInviteModal() {
 
 // ─── CMD PALETTE ───
 const CMD_ITEMS = [
-  { icon: 'ri-add-circle-line', section: 'Actions', text: 'New Document', desc: 'Create blank or from template', action: openNewDocModal },
-  { icon: 'ri-building-2-line', section: 'Actions', text: 'Switch Workspace', desc: '', action: openWorkspaceSwitcher },
-  { icon: 'ri-user-add-line', section: 'Actions', text: 'Invite Team Member', desc: '', action: openInviteModal },
   { icon: 'ri-dashboard-2-line', section: 'Navigate', text: 'Dashboard', desc: '', action: () => switchView('dashboard') },
-  { icon: 'ri-file-list-3-line', section: 'Navigate', text: 'Review Queue', desc: '', action: () => switchView('queue') },
   { icon: 'ri-book-2-line', section: 'Navigate', text: 'Knowledge Base', desc: '', action: () => switchView('kb') },
   { icon: 'ri-settings-3-line', section: 'Navigate', text: 'Settings', desc: '', action: () => switchView('settings') },
   { icon: 'ri-sparkling-2-line', section: 'AI', text: 'AI: Continue writing', desc: 'Extend current paragraph', action: () => runAI('continue') },
@@ -1432,8 +1505,25 @@ const CMD_ITEMS = [
   { icon: 'ri-compress-v-line', section: 'AI', text: 'AI: Shorten text', desc: 'Condense selection', action: () => runAI('shorten') },
   { icon: 'ri-sun-line', section: 'Settings', text: 'Light Mode', desc: '', action: () => applyTheme('light') },
   { icon: 'ri-moon-line', section: 'Settings', text: 'Dark Mode', desc: '', action: () => applyTheme('dark') },
+  { icon: 'ri-user-star-line', section: 'Actions', text: 'Switch Role (Demo)', desc: 'Preview different roles', action: openRoleSwitcher },
   { icon: 'ri-logout-box-line', section: 'Account', text: 'Sign Out', desc: '', action: () => { LS.del('onboarded'); location.reload(); } },
 ];
+
+// Role-gated CMD items added dynamically
+function getRoleCmdItems() {
+  const items = [];
+  if (can('canCreate')) items.push({ icon: 'ri-add-circle-line', section: 'Actions', text: 'New Document', desc: 'Create blank or from template', action: openNewDocModal });
+  if (can('canManageTeam')) {
+    items.push({ icon: 'ri-building-2-line', section: 'Actions', text: 'Switch Workspace', desc: '', action: openWorkspaceSwitcher });
+    items.push({ icon: 'ri-user-add-line', section: 'Actions', text: 'Invite Team Member', desc: '', action: openInviteModal });
+  }
+  if (can('canViewQueue')) items.push({ icon: 'ri-file-list-3-line', section: 'Navigate', text: 'Review Queue', desc: '', action: () => switchView('queue') });
+  if (can('canViewAnalytics')) items.push({ icon: 'ri-bar-chart-line', section: 'Navigate', text: 'Analytics', desc: 'Team productivity & doc velocity', action: () => switchView('analytics') });
+  if (can('canViewCalendar')) items.push({ icon: 'ri-calendar-2-line', section: 'Navigate', text: 'Editorial Calendar', desc: 'Deadlines and publish schedule', action: () => switchView('calendar') });
+  if (can('canViewTeams')) items.push({ icon: 'ri-team-line', section: 'Navigate', text: 'Team & Roles', desc: 'Manage members and permissions', action: () => switchView('teams') });
+  return items;
+}
+
 let cmdIdx = 0;
 function bindCmdPalette() {
   $('#cmd-input').on('input', function () { renderCmdResults($(this).val()); });
@@ -1454,8 +1544,11 @@ function openCmd() {
 }
 function closeCmd() { STATE.cmdOpen = false; $('#cmd-palette-overlay').addClass('hidden'); }
 function renderCmdResults(q) {
-  const docItems = STATE.docs.slice(0, 5).map(d => ({ icon: 'ri-file-text-line', section: 'Documents', text: d.title, desc: d.status, action: () => openDoc(d.id) }));
-  const all = [...CMD_ITEMS, ...docItems];
+  const visibleDocs = currentRole === 'writer'
+    ? STATE.docs.filter(d => d.author === STATE.user.name)
+    : STATE.docs;
+  const docItems = visibleDocs.slice(0, 5).map(d => ({ icon: 'ri-file-text-line', section: 'Documents', text: d.title, desc: d.status, action: () => openDoc(d.id) }));
+  const all = [...CMD_ITEMS, ...getRoleCmdItems(), ...docItems];
   const filtered = q ? all.filter(i => i.text.toLowerCase().includes(q.toLowerCase()) || i.desc.toLowerCase().includes(q.toLowerCase())) : all;
   const secs = {};
   filtered.forEach((it, i) => { const s = it.section || 'Other'; if (!secs[s]) secs[s] = []; secs[s].push({ ...it, _i: i }); });
@@ -1484,8 +1577,7 @@ function updateCmdFocus() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   HACKATHON FEATURES — PROFESSION MODE, ROLES, ANALYTICS
-   CALENDAR, TEAMS, INTELLIGENCE PANEL
+   PROFESSION MODES, ROLES, ANALYTICS, CALENDAR, TEAMS
 ═══════════════════════════════════════════════════════ */
 
 // ─── PROFESSION MODE ───
@@ -1532,7 +1624,8 @@ const MODES = {
     label: 'Writer', icon: 'ri-edit-2-line', color: 'peach',
     aiLabel: 'Writing AI', aiHints: ['Continue', 'Improve', 'Headlines', 'Shorten', 'Summarise'],
     widget: () => {
-      const totalWords = STATE.docs.reduce((a, d) => a + (d.words || 0), 0);
+      const myDocs = currentRole === 'writer' ? STATE.docs.filter(d => d.author === STATE.user.name) : STATE.docs;
+      const totalWords = myDocs.reduce((a, d) => a + (d.words || 0), 0);
       const goal = 10000;
       const pct = Math.min(100, Math.round(totalWords / goal * 100));
       return `
@@ -1556,26 +1649,18 @@ function applyMode(mode) {
   currentMode = mode;
   STATE.user.mode = mode;
   LS.set('user', STATE.user);
-  // update pills
   $('.mode-pill').removeClass('mp-active');
   $(`#mp-${mode}`).addClass('mp-active');
-  // clear and re-render profession widget area
   renderModeWidgets();
   const m = MODES[mode];
   if (m) {
-    // Update AI panel hints
     const aiHints = m.aiHints || [];
     $('.ai-quick-grid').html(aiHints.map(h => {
-      const cmdMap = {
-        'Continue': 'continue', 'Improve': 'improve', 'Shorten': 'shorten', 'Headlines': 'headline', 'Summarise': 'summarize',
-        'AP Style check': 'improve', 'Fact verify': 'research', 'Source check': 'research', 'Headline draft': 'headline', 'Lede shorten': 'shorten',
-        'Check citations': 'research', 'Flag risks': 'improve', 'Bluebook format': 'summarize', 'Clause review': 'improve', 'Case lookup': 'research'
-      };
+      const cmdMap = { 'Continue': 'continue', 'Improve': 'improve', 'Shorten': 'shorten', 'Headlines': 'headline', 'Summarise': 'summarize', 'AP Style check': 'improve', 'Fact verify': 'research', 'Source check': 'research', 'Headline draft': 'headline', 'Lede shorten': 'shorten', 'Check citations': 'research', 'Flag risks': 'improve', 'Bluebook format': 'summarize', 'Clause review': 'improve', 'Case lookup': 'research' };
       const ic = { continue: 'ri-arrow-right-circle-line', improve: 'ri-magic-line', shorten: 'ri-compress-v-line', headline: 'ri-newspaper-line', summarize: 'ri-file-text-line', research: 'ri-search-eye-line' };
       const cmd = cmdMap[h] || 'improve';
       return `<button class="ai-quick-btn" data-cmd="${cmd}"><i class="ri ${ic[cmd]}"></i>${h}</button>`;
     }).join(''));
-    // Update mode badge in editor meta
     const mi = { writer: 'Writer Mode', journalism: 'Journalism Mode', legal: 'Legal Mode' };
     const ii = { writer: 'ri-edit-2-line', journalism: 'ri-newspaper-line', legal: 'ri-scales-line' };
     $('#meta-mode').html(`<i class="ri ${ii[mode]}"></i> ${mi[mode]}`);
@@ -1590,7 +1675,6 @@ function renderModeWidgets() {
   if ($('#mode-widget-area').length) $('#mode-widget-area').html(html);
 }
 
-// Insert mode widget area into dashboard body after stats grid
 function injectModeWidgetArea() {
   if (!$('#mode-widget-area').length) {
     $('<div id="mode-widget-area"></div>').insertAfter('#stats-grid');
@@ -1598,7 +1682,6 @@ function injectModeWidgetArea() {
   renderModeWidgets();
 }
 
-// Mode pill click handlers
 $(document).on('click', '.mode-pill', function () {
   const mode = this.id.replace('mp-', '');
   if (MODES[mode]) applyMode(mode);
@@ -1609,7 +1692,7 @@ const ROLES = [
   { key: 'lead', name: 'Lead Editor', icon: '👑', chipClass: 'chip-lead', desc: 'Full access: approvals, analytics, team management', dashVariant: 'lead' },
   { key: 'editor', name: 'Editor', icon: '✍️', chipClass: 'chip-editor', desc: 'Edit, review, approve drafts from team writers', dashVariant: 'editor' },
   { key: 'reviewer', name: 'Reviewer', icon: '🔍', chipClass: 'chip-reviewer', desc: 'Review and annotate — cannot publish directly', dashVariant: 'reviewer' },
-  { key: 'writer', name: 'Writer', icon: '📝', chipClass: 'chip-writer', desc: 'Create and draft documents', dashVariant: 'writer' },
+  { key: 'writer', name: 'Writer', icon: '📝', chipClass: 'chip-writer', desc: 'Create and draft own documents, submit for review', dashVariant: 'writer' },
   { key: 'publisher', name: 'Publisher', icon: '🚀', chipClass: 'chip-publisher', desc: 'Publish approved docs and manage schedules', dashVariant: 'publisher' },
   { key: 'associate', name: 'Associate', icon: '👤', chipClass: 'chip-reviewer', desc: 'View-only access with comment permissions', dashVariant: 'associate' },
 ];
@@ -1620,7 +1703,7 @@ function openRoleSwitcher() {
   openModal(`
         <button class="modal-close"><i class="ri-close-line"></i></button>
         <div class="modal-title"><i class="ri-user-settings-line" style="color:var(--peach)"></i> Switch Role <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:6px">Demo mode</span></div>
-        <div class="modal-sub">See how Thread adapts to different roles and responsibilities.</div>
+        <div class="modal-sub">See how Thread adapts to different roles and permissions.</div>
         <div class="role-switcher-grid" id="role-switcher-grid">
           ${ROLES.map(r => `
             <div class="role-option ${r.key === currentRole ? 'selected' : ''}" data-role="${r.key}">
@@ -1642,49 +1725,82 @@ function applyRole(roleKey) {
   const role = ROLES.find(r => r.key === roleKey);
   if (!role) return;
   currentRole = roleKey;
+
   // Update role chip
   $('#role-chip-display').attr('class', `role-chip ${role.chipClass}`).attr('title', role.desc);
   $('#role-chip-label').text(role.name);
-  // Adapt dashboard based on role
-  adaptDashboardForRole(roleKey);
-  toast('success', `Now viewing as: ${role.name}`, 'ri-user-star-line');
+
+  // Apply role banner
+  renderRoleBanner();
+
+  // Adapt sidebar navigation
+  applyRoleNavigation();
+
+  // Adapt dashboard content
+  applyRoleDashboard();
+
+  // Re-render all affected views
+  renderStats();
+  renderDocGrid();
+  renderSidebarDocs();
+  renderQueueList();
+
+  toast('success', `Now viewing as: ${role.icon} ${role.name}`, 'ri-user-star-line');
 }
 
-function adaptDashboardForRole(roleKey) {
-  // Show/hide analytics nav for leads
-  if (roleKey === 'lead' || roleKey === 'editor') {
-    $('.nav-item[data-view="analytics"]').show();
+function applyRoleNavigation() {
+  // Analytics: Lead Editor and Editor only
+  $('.nav-item[data-view="analytics"]').toggle(can('canViewAnalytics'));
+
+  // Teams: Lead Editor and Editor only
+  $('.nav-item[data-view="teams"]').toggle(can('canViewTeams'));
+
+  // Queue: Lead, Editor, Reviewer, Publisher
+  $('.nav-item[data-view="queue"]').toggle(can('canViewQueue'));
+
+  // Calendar: all except Associate
+  $('.nav-item[data-view="calendar"]').toggle(can('canViewCalendar'));
+
+  // Redirect away from restricted views
+  if (!can('canViewAnalytics') && STATE.currentView === 'analytics') switchView('dashboard');
+  if (!can('canViewTeams') && STATE.currentView === 'teams') switchView('dashboard');
+  if (!can('canViewQueue') && STATE.currentView === 'queue') switchView('dashboard');
+  if (!can('canViewCalendar') && STATE.currentView === 'calendar') switchView('dashboard');
+}
+
+function applyRoleDashboard() {
+  // New doc button
+  $('#btn-new-doc').toggle(can('canCreate'));
+  $('#btn-new-folder').toggle(can('canCreate'));
+
+  // Queue button
+  $('#btn-goto-queue').toggle(can('canViewQueue'));
+
+  // Pending count label adapts
+  if (can('canViewQueue')) {
+    $('#dash-pending-count').parent().show();
   } else {
-    $('.nav-item[data-view="analytics"]').hide();
-    if (STATE.currentView === 'analytics') switchView('dashboard');
+    $('#dash-pending-count').parent().hide();
   }
-  // Adapt pending count display
-  const pendingCount = STATE.docs.filter(d => d.status === 'review').length;
-  if (roleKey === 'reviewer' || roleKey === 'editor' || roleKey === 'lead') {
-    $('#dash-pending-count').text(pendingCount).parent().show();
-  }
-  // Update greeting
-  const roleGreet = { lead: 'Your team has', editor: 'You have', reviewer: 'Awaiting your review:', writer: "You're working on", publisher: 'Ready to publish:' };
-  if (roleKey === 'writer') {
-    const myDocs = STATE.docs.filter(d => d.author === STATE.user.name);
-    $('#dash-sub-role').remove();
-    $('<div id="dash-sub-role" style="font-size:12px;color:var(--text3);margin-top:2px"></div>')
-      .text(`${myDocs.length} documents in progress`)
-      .insertAfter('#dash-sub-placeholder');
-  }
+
+  // KB new article
+  $('#btn-new-article').toggle(can('canManageKB'));
 }
 
 $(document).on('click', '#role-chip-display', openRoleSwitcher);
 
-// ─── ANALYTICS VIEW ───
+// ─── ANALYTICS ───
 function renderAnalyticsView() {
+  if (!can('canViewAnalytics')) {
+    $('#analytics-body').html(`<div style="text-align:center;padding:60px 20px;color:var(--text3)"><i class="ri-bar-chart-line" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i><div style="font-size:16px;font-weight:600;margin-bottom:6px">Analytics not available</div><div style="font-size:13px">This section requires Lead Editor or Editor access.</div></div>`);
+    return;
+  }
   const docs = STATE.docs;
   const byAuthor = {};
   docs.forEach(d => { byAuthor[d.author] = (byAuthor[d.author] || 0) + (d.words || 0); });
   const authors = Object.entries(byAuthor).sort((a, b) => b[1] - a[1]);
   const maxW = authors[0]?.[1] || 1;
   const colors = ['linear-gradient(90deg,var(--peach),var(--blush))', 'linear-gradient(90deg,var(--sky),var(--lav))', 'linear-gradient(90deg,var(--mint),var(--sky))', 'linear-gradient(90deg,var(--lemon),var(--peach))'];
-
   $('#analytics-body').html(`
         <div class="kpi-row">
           <div class="kpi-card"><div class="kpi-val" style="color:var(--peach)">${docs.length}</div><div class="kpi-lbl">Total Docs</div></div>
@@ -1741,7 +1857,6 @@ function renderAnalyticsView() {
       { av: 'AU', bg: 0, text: '<strong>Ayushi</strong> submitted "Local Journalism" for review', time: '2h ago' },
       { av: 'SP', bg: 1, text: '<strong>Sam</strong> approved "City Council Votes 7-2"', time: '1d ago' },
       { av: 'CM', bg: 3, text: '<strong>Casey</strong> resolved 4 comments on "Climate Change: Local Impact"', time: '2d ago' },
-      { av: 'AU', bg: 0, text: '<strong>Ayushi</strong> invited Casey Morgan to the workspace', time: '3d ago' },
     ].map(a => `
                 <div class="activity-item">
                   <div class="activity-av" style="background:${AGCS[a.bg % AGCS.length]}">${a.av}</div>
@@ -1753,18 +1868,19 @@ function renderAnalyticsView() {
         </div>`);
 }
 
-// ─── CALENDAR VIEW ───
+// ─── CALENDAR ───
 function renderCalendarView() {
+  if (!can('canViewCalendar')) {
+    $('#calendar-body').html(`<div style="text-align:center;padding:60px 20px;color:var(--text3)"><i class="ri-calendar-2-line" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i><div style="font-size:16px;font-weight:600;margin-bottom:6px">Calendar not available</div><div style="font-size:13px">Your current role does not have access to the editorial calendar.</div></div>`);
+    return;
+  }
   const now = new Date();
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  // Build 7-day week starting from Sunday of current week
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i); return d;
   });
-
-  // Map docs to days by deadline
   const docsByDay = {};
   STATE.docs.forEach(d => {
     if (d.deadline) {
@@ -1774,20 +1890,14 @@ function renderCalendarView() {
       docsByDay[key].push(d);
     }
   });
-
   const calGrid = weekDays.map(d => {
     const isToday = d.toDateString() === now.toDateString();
     const docsForDay = docsByDay[d.toDateString()] || [];
-    const addDoc = STATE.docs.find(doc => {
-      const dl = new Date(doc.deadline || '');
-      return Math.abs(dl - d) < 86400000 * 0.5 && doc.status === 'review';
-    });
     return `
           <div class="cal-day ${isToday ? 'today' : ''}">
             <div class="cal-day-label">${days[d.getDay()]}</div>
             <div class="cal-day-num">${d.getDate()}</div>
             ${docsForDay.map(doc => `<div class="cal-event ${doc.status}" title="${doc.title}">${doc.title.slice(0, 18)}…</div>`).join('')}
-            ${addDoc && docsForDay.length === 0 ? `<div class="cal-event review">${addDoc.title.slice(0, 16)}…</div>` : ''}
           </div>`;
   }).join('');
 
@@ -1803,16 +1913,13 @@ function renderCalendarView() {
           <button class="btn btn-sm btn-ghost" id="cal-next">Next <i class="ri-arrow-right-s-line"></i></button>
         </div>
         <div class="cal-grid">${calGrid}</div>
-        <div class="section-bar">
-          <div class="section-bar-title"><i class="ri-send-plane-line"></i> Publish Schedule</div>
-          <button class="btn btn-sm btn-ghost" onclick="switchView('calendar')">View all <i class="ri-arrow-right-line"></i></button>
-        </div>
+        <div class="section-bar"><div class="section-bar-title"><i class="ri-send-plane-line"></i> Publish Schedule</div></div>
         ${publishSchedule.length ? publishSchedule.map(p => `
           <div class="pq-row">
             <div class="pq-date">${p.date}</div>
             <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div><div style="font-size:11px;color:var(--text3)">${p.type === 'approved' ? 'Approved — ready to publish' : 'Published'}</div></div>
             ${badgeHtml(p.type)}
-          </div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No scheduled publications. Approve documents to add them.</div>'}
+          </div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No scheduled publications.</div>'}
         <div style="height:8px"></div>
         <div class="section-bar"><div class="section-bar-title"><i class="ri-calendar-check-line"></i> Upcoming Deadlines</div></div>
         ${STATE.docs.filter(d => d.deadline).map(d => `
@@ -1820,42 +1927,31 @@ function renderCalendarView() {
             <div class="pq-date">${new Date(d.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
             <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</div><div style="font-size:11px;color:var(--text3)"><i class="ri-user-3-line"></i> ${d.assignee || d.author}</div></div>
             ${badgeHtml(d.status)}
-          </div>`).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No deadlines set yet.</div>'}`);
+          </div>`).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px;text-align:center">No deadlines set yet.</div>'}
+        ${can('canCreate') ? '' : ''}`);
 
+  $('#btn-new-event').toggle(can('canEdit') || can('canManageTeam'));
   $('#cal-prev,#cal-next,#btn-cal-today').on('click', function () { toast('info', 'Calendar navigation', 'ri-calendar-2-line'); });
-  $('#btn-new-event').on('click', () => {
-    toast('success', 'Event scheduling opened (Demo)', 'ri-calendar-event-line');
-  });
+  $('#btn-new-event').on('click', () => { toast('success', 'Event scheduling opened (Demo)', 'ri-calendar-event-line'); });
 }
 
-// ─── TEAMS VIEW ───
+// ─── TEAMS ───
 function renderTeamsView() {
+  if (!can('canViewTeams')) {
+    $('#teams-body').html(`<div style="text-align:center;padding:60px 20px;color:var(--text3)"><i class="ri-team-line" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i><div style="font-size:16px;font-weight:600;margin-bottom:6px">Team management not available</div><div style="font-size:13px">This section requires Lead Editor or Editor access.</div></div>`);
+    return;
+  }
   const MODE_TEAMS = {
     journalism: [
-      {
-        name: 'Editorial Team', emoji: '📰', color: 'sky', desc: 'Breaking news, investigative reporting',
-        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@citybeat.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', init: 'JL', role: 'reviewer' }, { n: 'Casey Morgan', e: 'casey@citybeat.com', init: 'CM', role: 'writer' }]
-      },
-      {
-        name: 'Publishing Desk', emoji: '🚀', color: 'peach', desc: 'Scheduling and distribution',
-        members: [{ n: 'Dana Reyes', e: 'dana@citybeat.com', init: 'DR', role: 'publisher' }, { n: 'Mo Williams', e: 'mo@citybeat.com', init: 'MW', role: 'writer' }]
-      },
+      { name: 'Editorial Team', emoji: '📰', color: 'sky', desc: 'Breaking news, investigative reporting', members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@citybeat.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', init: 'JL', role: 'reviewer' }, { n: 'Casey Morgan', e: 'casey@citybeat.com', init: 'CM', role: 'writer' }] },
+      { name: 'Publishing Desk', emoji: '🚀', color: 'peach', desc: 'Scheduling and distribution', members: [{ n: 'Dana Reyes', e: 'dana@citybeat.com', init: 'DR', role: 'publisher' }, { n: 'Mo Williams', e: 'mo@citybeat.com', init: 'MW', role: 'associate' }] },
     ],
     legal: [
-      {
-        name: 'Litigation Team', emoji: '⚖️', color: 'lav', desc: 'Active cases and briefs',
-        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@firm.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@firm.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@firm.com', init: 'JL', role: 'reviewer' }]
-      },
-      {
-        name: 'Compliance', emoji: '🛡️', color: 'mint', desc: 'Regulatory and risk management',
-        members: [{ n: 'Casey Morgan', e: 'casey@firm.com', init: 'CM', role: 'associate' }, { n: 'Dana Reyes', e: 'dana@firm.com', init: 'DR', role: 'writer' }]
-      },
+      { name: 'Litigation Team', emoji: '⚖️', color: 'lav', desc: 'Active cases and briefs', members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@firm.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@firm.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@firm.com', init: 'JL', role: 'reviewer' }] },
+      { name: 'Compliance', emoji: '🛡️', color: 'mint', desc: 'Regulatory and risk management', members: [{ n: 'Casey Morgan', e: 'casey@firm.com', init: 'CM', role: 'associate' }, { n: 'Dana Reyes', e: 'dana@firm.com', init: 'DR', role: 'writer' }] },
     ],
     writer: [
-      {
-        name: 'Content Team', emoji: '✍️', color: 'peach', desc: 'Blog, newsletter, and brand writing',
-        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@studio.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@studio.com', init: 'SP', role: 'writer' }, { n: 'Jordan Lee', e: 'jordan@studio.com', init: 'JL', role: 'writer' }, { n: 'Casey Morgan', e: 'casey@studio.com', init: 'CM', role: 'reviewer' }]
-      },
+      { name: 'Content Team', emoji: '✍️', color: 'peach', desc: 'Blog, newsletter, and brand writing', members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@studio.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@studio.com', init: 'SP', role: 'writer' }, { n: 'Jordan Lee', e: 'jordan@studio.com', init: 'JL', role: 'writer' }, { n: 'Casey Morgan', e: 'casey@studio.com', init: 'CM', role: 'reviewer' }] },
     ]
   };
   const teams = MODE_TEAMS[currentMode] || MODE_TEAMS.journalism;
@@ -1868,7 +1964,7 @@ function renderTeamsView() {
               <div class="team-badge" style="background:color-mix(in srgb,var(--${t.color}) 18%,transparent)">${t.emoji}</div>
               <div><div class="team-name">${t.name}</div><div class="team-desc">${t.desc}</div></div>
             </div>
-            <button class="btn btn-sm btn-ghost" onclick="toast('info','Team settings','ri-settings-3-line')"><i class="ri-more-2-fill"></i></button>
+            ${can('canManageTeam') ? `<button class="btn btn-sm btn-ghost" onclick="toast('info','Team settings','ri-settings-3-line')"><i class="ri-more-2-fill"></i></button>` : ''}
           </div>
           <div>
             ${t.members.map((m, i) => `
@@ -1880,15 +1976,24 @@ function renderTeamsView() {
           </div>
         </div>`).join('') + `
         <div style="display:flex;gap:8px;margin-top:4px">
+          ${can('canManageTeam') ? `
           <button class="btn btn-ghost flex-1" style="justify-content:center" id="btn-invite-member2"><i class="ri-user-add-line"></i> Invite Member</button>
-          <button class="btn btn-ghost flex-1" style="justify-content:center" id="btn-new-team2"><i class="ri-add-line"></i> New Team</button>
+          <button class="btn btn-ghost flex-1" style="justify-content:center" id="btn-new-team2"><i class="ri-add-line"></i> New Team</button>` : '<div style="color:var(--text3);font-size:12px;padding:8px;text-align:center;width:100%"><i class="ri-lock-line"></i> Team management requires Lead Editor or Editor access.</div>'}
         </div>`);
-  $('#btn-invite-member,#btn-invite-member2').on('click', openInviteModal);
-  $('#btn-new-team,#btn-new-team2').on('click', () => {
-    openPromptModal('New Team', 'ri-group-line', 'Team Name', 'Enter new team name', (tn) => {
-      toast('success', `Team "${tn}" created (Demo)`);
+  if (can('canManageTeam')) {
+    $('#btn-invite-member,#btn-invite-member2').on('click', openInviteModal);
+    $('#btn-new-team,#btn-new-team2').on('click', () => {
+      openPromptModal('New Team', 'ri-group-line', 'Team Name', 'Enter new team name', (tn) => {
+        toast('success', `Team "${tn}" created (Demo)`);
+      });
     });
-  });
+  }
+  // Hide invite/new-team header buttons for non-managers
+  if (!can('canManageTeam')) {
+    $('#btn-invite-member,#btn-new-team').hide();
+  } else {
+    $('#btn-invite-member,#btn-new-team').show();
+  }
 }
 
 // ─── INTELLIGENCE / VALIDATION PANEL ───
@@ -1909,17 +2014,17 @@ function renderIntelPanel() {
   } else if (mode === 'legal') {
     html = `
           <div class="intel-section-hd"><i class="ri ri-scales-line"></i> Risk Flags</div>
-          <div class="intel-flag error"><i class="ri-close-circle-line"></i><span><strong>Section 3.2 Liability clause</strong> — ambiguous scope may expose party to unintended risk. Legal review required.</span></div>
-          <div class="intel-flag warn"><i class="ri-alert-line"></i><span><strong>Citation: 14 CFR 25.1309</strong> — verify current revision year (2023 vs 2024).</span></div>
-          <div class="intel-flag ok"><i class="ri-check-circle-line"></i><span>Parties correctly identified and styled per jurisdiction conventions.</span></div>
+          <div class="intel-flag error"><i class="ri-close-circle-line"></i><span><strong>Section 3.2 Liability clause</strong> — ambiguous scope may expose party to unintended risk.</span></div>
+          <div class="intel-flag warn"><i class="ri-alert-line"></i><span><strong>Citation: 14 CFR 25.1309</strong> — verify current revision year.</span></div>
+          <div class="intel-flag ok"><i class="ri-check-circle-line"></i><span>Parties correctly identified per jurisdiction conventions.</span></div>
           <div class="intel-section-hd"><i class="ri ri-book-2-line"></i> Bluebook Citations</div>
-          <div class="intel-flag info"><i class="ri-information-line"></i><span>Short form citation used on 3rd reference (cf. Rule 10.9) — acceptable.</span></div>
+          <div class="intel-flag info"><i class="ri-information-line"></i><span>Short form citation on 3rd reference (cf. Rule 10.9) — acceptable.</span></div>
           <div class="intel-flag warn"><i class="ri-alert-line"></i><span>Case name italicisation inconsistent on page 2. Standardise per Bluebook Rule 10.2.</span></div>`;
   } else {
     html = `
           <div class="intel-section-hd"><i class="ri ri-edit-2-line"></i> Writing Quality</div>
-          <div class="intel-flag ok"><i class="ri-check-circle-line"></i><span>Readability score: <strong>Good</strong> (Grade 9 equivalent — accessible for general readers).</span></div>
-          <div class="intel-flag warn"><i class="ri-alert-line"></i><span>Sentence length variance is low in ¶3. Consider mixing short and long sentences for rhythm.</span></div>
+          <div class="intel-flag ok"><i class="ri-check-circle-line"></i><span>Readability score: <strong>Good</strong> (Grade 9 equivalent).</span></div>
+          <div class="intel-flag warn"><i class="ri-alert-line"></i><span>Sentence length variance is low in ¶3. Mix short and long sentences for rhythm.</span></div>
           <div class="intel-flag info"><i class="ri-information-line"></i><span>Word count: 1,240 — approaching target length for this template.</span></div>
           <div class="intel-section-hd"><i class="ri ri-lightbulb-line"></i> Suggestions</div>
           <div class="intel-flag info"><i class="ri-information-line"></i><span>Opening hook is strong. Consider adding a sub-headline to break up the introduction.</span></div>
@@ -1928,46 +2033,12 @@ function renderIntelPanel() {
   $('#intel-panel-body').html(html);
 }
 
-// ─── EXTEND switchView ───
-const _origSwitchView = switchView;
-switchView = function (view) {
-  STATE.currentView = view;
-  const views = ['dashboard', 'editor', 'queue', 'kb', 'settings', 'analytics', 'calendar', 'teams'];
-  views.forEach(v => $(`#view-${v}`).toggleClass('hidden', v !== view));
-  $('.nav-item[data-view]').removeClass('active');
-  $(`.nav-item[data-view="${view}"]`).addClass('active');
-  if (view === 'kb') renderKbView();
-  if (view === 'queue') renderQueueView();
-  if (view === 'settings') renderSettingsBody();
-  if (view === 'analytics') renderAnalyticsView();
-  if (view === 'calendar') renderCalendarView();
-  if (view === 'teams') renderTeamsView();
-  if (view === 'editor' && !STATE.currentDocId) switchView('dashboard');
-  if (view === 'dashboard') {
-    setTimeout(injectModeWidgetArea, 10);
-  }
-};
-
-// CMD items for new views
-CMD_ITEMS.push(
-  { icon: 'ri-bar-chart-line', section: 'Navigate', text: 'Analytics', desc: 'Team productivity & doc velocity', action: () => switchView('analytics') },
-  { icon: 'ri-calendar-2-line', section: 'Navigate', text: 'Editorial Calendar', desc: 'Deadlines and publish schedule', action: () => switchView('calendar') },
-  { icon: 'ri-team-line', section: 'Navigate', text: 'Team & Roles', desc: 'Manage members and permissions', action: () => switchView('teams') },
-  { icon: 'ri-user-star-line', section: 'Actions', text: 'Switch Role (Demo)', desc: 'Preview Lead Editor, Reviewer, Writer…', action: openRoleSwitcher }
-);
-
-// Init mode and role on load
+// ─── INIT ───
 const savedMode = LS.get('user', {}).mode;
 if (savedMode) applyMode(savedMode);
-switchRole('Lead Editor');
 
 if (STATE.onboarded) {
-  setTimeout(() => {
-    $('#splash').remove();
-    launchApp();
-  }, 300);
-} else {
-  initOnboarding();
+  setTimeout(() => { $('#splash').remove(); launchApp(); }, 300);
 }
 injectModeWidgetArea();
 renderIntelPanel();

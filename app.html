@@ -13,6 +13,679 @@
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <link rel="stylesheet" href="css/app.css">
+
+  <style>
+    /* ── RBAC ROLE CHIP VARIANTS ── */
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .18s;
+    }
+
+    .role-chip:hover {
+      opacity: .85;
+    }
+
+    .chip-lead {
+      background: linear-gradient(135deg, #FFF3ED, #FFE8D6);
+      color: #C2410C;
+      border-color: #FCA97A;
+    }
+
+    .chip-editor {
+      background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+      color: #1D4ED8;
+      border-color: #93C5FD;
+    }
+
+    .chip-reviewer {
+      background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+      color: #15803D;
+      border-color: #86EFAC;
+    }
+
+    .chip-writer {
+      background: linear-gradient(135deg, #FDF4FF, #FAE8FF);
+      color: #7E22CE;
+      border-color: #D8B4FE;
+    }
+
+    .chip-publisher {
+      background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+      color: #065F46;
+      border-color: #6EE7B7;
+    }
+
+    /* ── ROLE SWITCHER GRID ── */
+    .role-switcher-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .role-option {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      transition: all .18s var(--spring);
+    }
+
+    .role-option:hover {
+      border-color: var(--peach);
+      background: var(--peach-ll);
+    }
+
+    .role-option.selected {
+      border-color: var(--peach);
+      background: var(--peach-ll);
+    }
+
+    .role-option-icon {
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .role-option-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .role-option-desc {
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.4;
+    }
+
+    /* ── ROLE BADGE VARIANTS (Team view) ── */
+    .role-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--bg3);
+      color: var(--text2);
+    }
+
+    .role-lead {
+      background: #FFF3ED;
+      color: #C2410C;
+    }
+
+    .role-editor {
+      background: #EFF6FF;
+      color: #1D4ED8;
+    }
+
+    .role-reviewer {
+      background: #F0FDF4;
+      color: #15803D;
+    }
+
+    .role-writer {
+      background: #FDF4FF;
+      color: #7E22CE;
+    }
+
+    .role-publisher {
+      background: #ECFDF5;
+      color: #065F46;
+    }
+
+    /* ── DISABLED TOOLBAR ── */
+    .tb-disabled {
+      opacity: 0.35 !important;
+      pointer-events: none !important;
+      cursor: not-allowed !important;
+    }
+
+    [contenteditable="false"] {
+      background: var(--bg2) !important;
+      cursor: default !important;
+      user-select: text !important;
+    }
+
+    /* ── ROLE ACCESS BANNER ── */
+    #role-access-banner {
+      z-index: 10;
+    }
+
+    /* ── WORKFLOW STATE DISABLED ── */
+    .wf-disabled {
+      pointer-events: none !important;
+    }
+
+    /* ── RBAC PERMISSION TOOLTIP (shown on disabled buttons) ── */
+    [data-rbac-disabled] {
+      position: relative;
+      opacity: 0.4;
+      cursor: not-allowed !important;
+      pointer-events: auto !important;
+    }
+
+    [data-rbac-disabled]:hover::after {
+      content: attr(data-rbac-disabled);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    /* ── QUEUE CARD ACTIONS ── */
+    .queue-card-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-success {
+      background: var(--mint-ll);
+      color: var(--mint);
+      border: 1.5px solid var(--mint);
+      font-weight: 600;
+    }
+
+    .btn-success:hover {
+      background: var(--mint);
+      color: #fff;
+    }
+
+    /* ── READ-ONLY INDICATOR IN EDITOR ── */
+    #editor-readonly-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── INTELLIGENCE PANEL FLAGS ── */
+    .intel-section-hd {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text3);
+      margin: 14px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .intel-flag {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 5px;
+      line-height: 1.45;
+    }
+
+    .intel-flag i {
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .intel-flag.ok {
+      background: var(--mint-ll);
+      color: #166534;
+    }
+
+    .intel-flag.warn {
+      background: var(--lemon-ll, #FFFBEB);
+      color: #92400E;
+    }
+
+    .intel-flag.error {
+      background: var(--blush-ll);
+      color: #9F1239;
+    }
+
+    .intel-flag.info {
+      background: var(--sky-ll);
+      color: #0C4A6E;
+    }
+
+    /* ── QUEUE CARD ── */
+    .queue-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .queue-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .queue-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .queue-card-meta {
+      font-size: 12px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .queue-card-meta i {
+      font-size: 12px;
+    }
+
+    /* ── ANALYTICS BODY ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      text-align: center;
+    }
+
+    .kpi-val {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .kpi-lbl {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .analytics-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .analytics-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: var(--text3);
+      width: 52px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--bg3);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .6s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .bar-val {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text2);
+      width: 32px;
+      flex-shrink: 0;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .activity-av {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .activity-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .activity-time {
+      font-size: 10px;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    /* ── CALENDAR ── */
+    .cal-week-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .cal-week-label {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .cal-day {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      min-height: 90px;
+    }
+
+    .cal-day.today {
+      border-color: var(--peach);
+      background: var(--peach-ll);
+    }
+
+    .cal-day-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+    }
+
+    .cal-day-num {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 2px 0 6px;
+    }
+
+    .cal-event {
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: var(--peach-ll);
+      color: var(--peach);
+      border-left: 2px solid var(--peach);
+    }
+
+    .cal-event.review {
+      background: var(--sky-ll);
+      color: var(--sky);
+      border-color: var(--sky);
+    }
+
+    .cal-event.approved {
+      background: var(--mint-ll);
+      color: var(--mint);
+      border-color: var(--mint);
+    }
+
+    .cal-event.published {
+      background: var(--lav-ll, #F3F0FF);
+      color: var(--lav);
+      border-color: var(--lav);
+    }
+
+    .pq-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 7px;
+      background: var(--card);
+    }
+
+    .pq-date {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      width: 42px;
+      flex-shrink: 0;
+    }
+
+    /* ── TEAMS ── */
+    .team-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .team-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .team-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .team-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .team-desc {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .member-row:last-child {
+      border-bottom: none;
+    }
+
+    .member-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .member-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .member-email {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* ── MODE WIDGETS ── */
+    .mode-widget {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .mode-widget-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .ap-style-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.45;
+    }
+
+    .ap-style-item:last-child {
+      border-bottom: none;
+    }
+
+    .case-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .case-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    .risk-chip {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .risk-high {
+      background: #FEE2E2;
+      color: #B91C1C;
+    }
+
+    .risk-med {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .risk-low {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .word-goal-track {
+      height: 8px;
+      background: var(--bg3);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    .word-goal-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--peach), var(--blush));
+      transition: width .6s cubic-bezier(.22, 1, .36, 1);
+    }
+  </style>
 </head>
 
 <body>
@@ -23,33 +696,13 @@
   <div id="profile-dropdown" class="hidden"></div>
   <div id="modal-container"></div>
 
-  <!-- ═══════════ ONBOARDING ═══════════ -->
-  <div id="onboarding-overlay" class="hidden">
-    <div class="ob-top">
-      <div class="ob-logo">
-        <img src="assets/favicon.png" class="ob-logo-icon" alt="Thread Logo" style="background: none; object-fit: contain; padding: 2px;">
-        <div>
-          <div class="ob-logo-text"><b>Thread</b></div>
-          <div class="ob-tagline">Every word connected.</div>
-        </div>
-      </div>
-      <button class="icon-btn" id="ob-theme-btn" title="Toggle theme"><i class="ri-sun-line"></i></button>
-    </div>
-    <div class="ob-progress">
-      <div class="ob-steps-row" id="ob-steps-row"></div>
-      <div class="ob-progress-label" id="ob-progress-label">Step <em>1</em> of 7 — Create your account</div>
-    </div>
-    <div class="ob-content">
-      <div id="ob-step-container"></div>
-    </div>
-  </div>
-
   <!-- ═══════════ MAIN APP ═══════════ -->
   <div id="app" class="hidden">
 
     <div id="topbar">
       <div class="logo" id="logo-home">
-        <img src="assets/favicon.png" class="logo-icon" alt="Thread Logo" style="background: none; object-fit: contain; padding: 2px;">
+        <img src="assets/favicon.png" class="logo-icon" alt="Thread Logo"
+          style="background: none; object-fit: contain; padding: 2px;">
         <div class="logo-text"><b>Thread</b></div>
       </div>
       <div class="topbar-divider"></div>
@@ -67,6 +720,8 @@
       </div>
     </div>
 
+    <!-- Role access banner is injected here by JS after #topbar -->
+
     <div id="app-body">
 
       <div id="sidebar">
@@ -83,6 +738,7 @@
         <div class="sidebar-scroll">
           <div class="sidebar-section">
             <div class="sidebar-section-hd">Main</div>
+            <!-- nav items shown/hidden per role by JS -->
             <div class="nav-item active" data-view="dashboard"><span class="ni"><i
                   class="ri-dashboard-2-line"></i></span><span class="nl">Dashboard</span></div>
             <div class="nav-item" data-view="queue"><span class="ni"><i class="ri-file-list-3-line"></i></span><span
@@ -122,14 +778,18 @@
             <div class="mode-pill mp-writer" id="mp-writer" title="Writer mode"><i class="ri-edit-2-line"></i><span
                 class="nl">Writer</span></div>
             <div class="mode-sep"></div>
-            <div id="role-chip-display" class="role-chip chip-editor" title="Switch role for demo"><i
-                class="ri-user-star-line"></i><span id="role-chip-label">Lead Editor</span></div>
+            <!-- Role chip: clickable to switch role for demo -->
+            <div id="role-chip-display" class="role-chip chip-lead" title="Switch role for demo">
+              <i class="ri-user-star-line"></i>
+              <span id="role-chip-label">Lead Editor</span>
+            </div>
           </div>
           <div class="dash-header">
             <div class="dash-greeting" id="dash-greeting">Good morning <i class="ri-sun-line"
                 style="font-size:18px;color:var(--lemon)"></i></div>
             <div class="dash-sub">You have <span id="dash-pending-count">0</span> documents pending review.</div>
             <div class="dash-actions">
+              <!-- btn-new-doc and btn-new-folder hidden for non-creators by JS -->
               <button class="btn btn-primary" id="btn-new-doc"><i class="ri-add-line"></i> New Document</button>
               <button class="btn btn-ghost" id="btn-goto-queue"><i class="ri-file-list-3-line"></i> Review
                 Queue</button>
@@ -138,18 +798,22 @@
           </div>
           <div class="dash-body">
             <div class="stats-grid" id="stats-grid"></div>
+            <!-- Mode widget area injected here by JS -->
             <div class="section-bar">
               <div class="section-bar-title"><i class="ri-file-text-line"></i> Recent Documents</div>
               <button class="btn btn-sm btn-ghost" id="btn-view-all-docs">View all <i
                   class="ri-arrow-right-line"></i></button>
             </div>
             <div class="doc-grid" id="doc-grid"></div>
-            <div class="section-bar">
-              <div class="section-bar-title"><i class="ri-file-list-3-line"></i> Review Queue</div>
-              <button class="btn btn-sm btn-ghost" data-view-link="queue">View all <i
-                  class="ri-arrow-right-line"></i></button>
+            <!-- Queue section: only shown for roles with canViewQueue -->
+            <div id="dash-queue-section">
+              <div class="section-bar">
+                <div class="section-bar-title"><i class="ri-file-list-3-line"></i> Review Queue</div>
+                <button class="btn btn-sm btn-ghost" data-view-link="queue">View all <i
+                    class="ri-arrow-right-line"></i></button>
+              </div>
+              <div class="queue-list" id="dash-queue-list"></div>
             </div>
-            <div class="queue-list" id="dash-queue-list"></div>
             <div class="section-bar" style="margin-top:20px">
               <div class="section-bar-title"><i class="ri-book-2-line"></i> Knowledge Base</div>
               <button class="btn btn-sm btn-ghost" data-view-link="kb">Manage <i
@@ -164,6 +828,7 @@
           <div class="editor-topbar">
             <button class="tb-btn" id="btn-back-dash" title="Back"><i class="ri-arrow-left-line"></i></button>
             <div class="tb-sep"></div>
+            <!-- Formatting controls: disabled for non-editors via JS -->
             <select class="tb-select" id="heading-select">
               <option value="p">Paragraph</option>
               <option value="h1">Title</option>
@@ -199,6 +864,7 @@
               </div>
               <div class="tb-sep"></div>
               <div id="colab-avatars" style="display:flex;margin-right:4px"></div>
+              <!-- Submit button: hidden for roles without canSubmitForReview -->
               <button class="btn btn-sm btn-primary" id="btn-submit-review"><i class="ri-send-plane-line"></i>
                 Submit</button>
               <button class="icon-btn" id="btn-toggle-panel" title="Toggle panel"><i
@@ -207,6 +873,7 @@
           </div>
           <div class="editor-body">
             <div id="editor-canvas">
+              <!-- doc-title is readonly for non-editors via JS -->
               <textarea id="doc-title" rows="1" placeholder="Untitled document…"></textarea>
               <div class="doc-meta-row">
                 <span class="doc-meta-chip"><i class="ri-user-3-line"></i><span id="meta-author-name">—</span></span>
@@ -214,9 +881,11 @@
                 <span class="doc-meta-chip"><i class="ri-file-word-line"></i><span id="wc-label">0 words</span></span>
                 <span class="doc-meta-chip"><i class="ri-time-line"></i><span id="rt-label">0 min read</span></span>
                 <span id="doc-badge-container"></span>
+                <!-- read-only badge injected here by JS for restricted roles -->
                 <span class="doc-meta-chip" style="margin-left:auto;border-color:var(--lav-l);color:var(--lav)"
                   id="meta-mode"><i class="ri-edit-2-line"></i> Writer Mode</span>
               </div>
+              <!-- contenteditable set to false for non-editors via JS -->
               <div id="doc-content" contenteditable="true" data-placeholder="Start writing… press / for commands"></div>
             </div>
             <div id="context-panel">
@@ -268,6 +937,7 @@
                 <div class="panel-pane" id="pane-comments">
                   <div id="comments-list"></div>
                   <div style="margin-top:10px">
+                    <!-- Comment input shown/hidden per role by JS (canComment) -->
                     <textarea class="add-comment-input" id="new-comment-input" placeholder="Add a comment… (⌘↵ to post)"
                       rows="2"></textarea>
                     <button class="btn btn-sm btn-primary w-full" id="add-comment-btn" style="justify-content:center"><i
@@ -276,6 +946,7 @@
                 </div>
                 <div class="panel-pane" id="pane-workflow">
                   <div class="wf-section-title">Document Status</div>
+                  <!-- Workflow states: clickable transitions filtered by role in JS -->
                   <div id="workflow-states-list"></div>
                   <div class="wf-section-title">Assigned To</div>
                   <div
@@ -284,17 +955,22 @@
                       style="width:28px;height:28px;font-size:11px;background:linear-gradient(135deg,var(--peach),var(--blush));margin-right:0;flex-shrink:0">
                       JC</div>
                     <span style="font-size:13px;font-weight:600;flex:1" id="wf-assignee">—</span>
+                    <!-- Reassign button: hidden for non-team-managers by JS -->
                     <button class="btn btn-sm btn-ghost" id="wf-reassign-btn"><i class="ri-user-add-line"></i>
                       Change</button>
                   </div>
                   <div class="wf-section-title">Deadline</div>
+                  <!-- Deadline input: disabled for non-editors by JS -->
                   <input type="date" class="form-input" id="wf-deadline" style="height:38px;font-size:13px">
                   <div class="wf-section-title">Actions</div>
                   <div style="display:flex;flex-direction:column;gap:6px">
+                    <!-- Submit: hidden for roles without canSubmitForReview by JS -->
                     <button class="btn btn-primary w-full" style="justify-content:center" id="wf-submit-btn"><i
                         class="ri-send-plane-line"></i> Submit for Review</button>
+                    <!-- Version history: always available to viewers -->
                     <button class="btn btn-ghost w-full" style="justify-content:center" id="wf-version-btn"><i
                         class="ri-history-line"></i> Version History</button>
+                    <!-- Delete: hidden for non-deleters by JS -->
                     <button class="btn btn-danger w-full" style="justify-content:center" id="wf-delete-btn"><i
                         class="ri-delete-bin-line"></i> Delete Document</button>
                   </div>
@@ -322,11 +998,12 @@
         </div>
 
         <!-- REVIEW QUEUE -->
+        <!-- Entire view hidden in sidebar nav for Writer and Associate by JS -->
         <div id="view-queue" class="hidden">
           <div class="view-header">
             <div class="dash-greeting"><i class="ri-file-list-3-line" style="font-size:20px;color:var(--sky)"></i>
               Review Queue</div>
-            <div class="dash-sub">Documents waiting for editorial review and approval.</div>
+            <div class="dash-sub" id="queue-sub-label">Documents waiting for editorial review and approval.</div>
           </div>
           <div class="view-body" id="queue-body"></div>
         </div>
@@ -338,6 +1015,7 @@
               Base</div>
             <div class="dash-sub">Style guides, source library, and team wiki.</div>
             <div class="dash-actions" style="margin-top:12px">
+              <!-- New Article button: hidden for non-KB-managers by JS -->
               <button class="btn btn-primary" id="btn-new-article"><i class="ri-add-line"></i> New Article</button>
               <button class="btn btn-ghost" id="btn-search-kb"><i class="ri-search-line"></i> Search KB</button>
             </div>
@@ -358,6 +1036,7 @@
         </div>
 
         <!-- ANALYTICS -->
+        <!-- Entire view hidden in sidebar nav for Reviewer, Writer, Publisher, Associate by JS -->
         <div id="view-analytics" class="hidden">
           <div class="view-header">
             <div class="dash-greeting"><i class="ri-bar-chart-line" style="font-size:20px;color:var(--peach)"></i>
@@ -368,12 +1047,14 @@
         </div>
 
         <!-- CALENDAR -->
+        <!-- Entire view hidden for Associate by JS -->
         <div id="view-calendar" class="hidden">
           <div class="view-header">
             <div class="dash-greeting"><i class="ri-calendar-2-line" style="font-size:20px;color:var(--blush)"></i>
               Editorial Calendar</div>
             <div class="dash-sub">Deadlines, publish dates, and team schedule — all in one view.</div>
             <div class="dash-actions" style="margin-top:12px">
+              <!-- New Event: hidden for non-editors by JS -->
               <button class="btn btn-primary" id="btn-new-event"><i class="ri-add-line"></i> New Event</button>
               <button class="btn btn-ghost" id="btn-cal-today"><i class="ri-focus-3-line"></i> Today</button>
             </div>
@@ -382,12 +1063,14 @@
         </div>
 
         <!-- TEAMS -->
+        <!-- Entire view hidden for Reviewer, Writer, Publisher, Associate by JS -->
         <div id="view-teams" class="hidden">
           <div class="view-header">
             <div class="dash-greeting"><i class="ri-team-line" style="font-size:20px;color:var(--mint)"></i> Team &amp;
               Roles</div>
             <div class="dash-sub">Manage your organisation's structure, members, and role-based access.</div>
             <div class="dash-actions" style="margin-top:12px">
+              <!-- Invite/New Team: hidden for non-team-managers by JS -->
               <button class="btn btn-primary" id="btn-invite-member"><i class="ri-user-add-line"></i> Invite
                 Member</button>
               <button class="btn btn-ghost" id="btn-new-team"><i class="ri-add-line"></i> New Team</button>
