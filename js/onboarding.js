@@ -1,16 +1,16 @@
 // ── THEME ────────────────────────────────────────────────────────
-const LS_THEME = 'thread_theme';
-function getTheme() { return localStorage.getItem(LS_THEME) || 'light'; }
+const LS_THEME = 'th_theme';
+function getTheme() { try { const v = localStorage.getItem(LS_THEME); return v ? JSON.parse(v) : 'light'; } catch { return 'light'; } }
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem(LS_THEME, t);
+  localStorage.setItem(LS_THEME, JSON.stringify(t));
   document.getElementById('themeIcon').className = t === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
 }
 applyTheme(getTheme());
 document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
 
 // ── ONBOARDING STATE ─────────────────────────────────────────────
-const OB_KEY = 'thread_onboarding';
+const OB_KEY = 'th_onboarding';
 let obData = JSON.parse(localStorage.getItem(OB_KEY) || '{}');
 let currentStep = obData.currentStep || 1;
 const TOTAL_STEPS = 7;
@@ -127,8 +127,8 @@ function checkPassword(val) {
 }
 
 function socialLogin(provider) {
-  obData.name = provider === 'Google' ? 'Priya Sharma' : 'dev_user';
-  obData.email = provider === 'Google' ? 'priya@newsroom.co' : 'dev@github.com';
+  obData.name = provider === 'Google' ? 'Ayushi Upadhyay' : 'dev_user';
+  obData.email = provider === 'Google' ? 'ayushi@newsroom.co' : 'dev@github.com';
   saveOb();
   goNext();
   startResendTimer();
@@ -318,9 +318,9 @@ function launchWorkspace() {
     role: obData.role || 'Writer',
     onboarded: true,
   };
-  localStorage.setItem('thread_user', JSON.stringify(user));
-  localStorage.setItem('thread_onboarded', '1');
-  if (obData.theme && obData.theme !== 'system') localStorage.setItem('thread_theme', obData.theme);
+  localStorage.setItem('th_user', JSON.stringify(user));
+  localStorage.setItem('th_onboarded', 'true');
+  if (obData.theme && obData.theme !== 'system') localStorage.setItem('th_theme', JSON.stringify(obData.theme));
 
   // Animate launch button
   const btn = document.getElementById('launchBtn');

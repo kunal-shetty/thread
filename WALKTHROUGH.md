@@ -59,7 +59,7 @@ The core workspace demonstrating an advanced interface with varied professional 
     *   **Recent Documents**: A grid of document cards showing title, author, stage badge, and last edited timestamp.
 *   **Analytics View**:
     *   Includes CSS-driven visual bar charts indicating words written per author and the breakdown of documents by their workflow status.
-    *   **Team Activity Feed**: A list of recently performed actions by colleagues (e.g., "Sarah approved a draft", "Alex reviewed a contract").
+    *   **Team Activity Feed**: A list of recently performed actions by colleagues (e.g., "Sarah approved a draft", "Ayushi reviewed a contract").
 *   **Editorial Calendar View**:
     *   A simulated weekly timeline grid featuring colored chips indicating document deadlines and publish dates.
     *   Includes side panels for "Publish Schedule" and "Upcoming Deadlines."

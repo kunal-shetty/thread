@@ -12,15 +12,15 @@ const LS = {
 
 // ─── DEFAULT DATA ───
 const DEFAULT_USER = {
-  name: 'Alex Rivera', email: 'alex@citybeat.com', initials: 'AR',
+  name: 'Ayushi Upadhyay', email: 'ayushi@citybeat.com', initials: 'AU',
   org: 'City Beat Newsroom', orgSlug: 'city-beat', plan: 'Team',
   mode: 'journalism', theme: 'light', aiEnabled: true, emailNotifs: true, font: 'Fraunces'
 };
 const DEFAULT_DOCS = [
   {
-    id: 'd1', title: 'The Future of Local Journalism', status: 'draft', words: 1240, author: 'Alex Rivera', authorInit: 'AR', updated: '2h ago', mode: 'journalism',
+    id: 'd1', title: 'The Future of Local Journalism', status: 'draft', words: 1240, author: 'Ayushi Upadhyay', authorInit: 'AU', updated: '2h ago', mode: 'journalism',
     content: '<p>The decline of local newsrooms has accelerated at an unprecedented pace over the past decade, leaving vast stretches of the country without reliable, community-focused reporting. As private equity firms acquire and systematically dismantle regional papers, a new generation of independent journalists is quietly building something different — and potentially more durable.</p><h2>The Scale of the Problem</h2><p>Since 2005, over 2,500 newspapers have closed across the United States alone — a staggering figure that represents not just the closure of businesses, but the disappearance of institutional knowledge, civic accountability, and the cultural fabric that binds communities together.</p><blockquote>"Without a local newspaper asking questions, who holds the municipal council accountable? Who covers the planning meeting that rezones your neighbourhood?" — Media scholar Dr. Priya Iyer</blockquote><h2>A New Model Emerging</h2><p>In cities like Chicago, Denver, and Austin, something interesting is happening. Former newspaper journalists are founding nonprofit newsrooms, reader-supported newsletters, and cooperative media organisations. These entities are small, scrappy, and deeply local in ways that the corporate newspapers they replaced rarely were.</p>',
-    deadline: '2026-03-20', assignee: 'Alex Rivera', comments: [
+    deadline: '2026-03-20', assignee: 'Ayushi Upadhyay', comments: [
       { id: 'c1', author: 'Sam Park', init: 'SP', color: 'mint', time: '2h ago', text: 'Great lede! Can we add a specific data point here — the exact number of papers closed would strengthen the opener.', resolved: false },
       { id: 'c2', author: 'Jordan Lee', init: 'JL', color: 'lav', time: '5h ago', text: 'The Priya Iyer quote is powerful. Do we have proper attribution? Check AP Style.', resolved: false }
     ]
@@ -36,15 +36,15 @@ const DEFAULT_DOCS = [
     deadline: '2026-03-10', assignee: 'Jordan Lee', comments: []
   },
   {
-    id: 'd4', title: 'City Council Votes 7–2 on Housing Bill', status: 'published', words: 890, author: 'Alex Rivera', authorInit: 'AR', updated: '5d ago', mode: 'journalism',
+    id: 'd4', title: 'City Council Votes 7–2 on Housing Bill', status: 'published', words: 890, author: 'Ayushi Upadhyay', authorInit: 'AU', updated: '5d ago', mode: 'journalism',
     content: '<p>The city council voted 7 to 2 Tuesday evening to approve a sweeping affordable housing bill that will reshape development policy across the city for the next decade, according to council records reviewed by Thread.</p>',
-    deadline: '', assignee: 'Alex Rivera', comments: []
+    deadline: '', assignee: 'Ayushi Upadhyay', comments: []
   },
   {
     id: 'd5', title: "Tech Giants' Capitol Hill Testimony", status: 'revision', words: 1780, author: 'Casey Morgan', authorInit: 'CM', updated: '6h ago', mode: 'journalism',
     content: '<p>Five of the world\'s largest technology executives faced pointed questioning from lawmakers on Tuesday, as a Senate subcommittee convened a hearing on data privacy practices that critics say put users at significant risk.</p>',
     deadline: '2026-03-18', assignee: 'Casey Morgan', comments: [
-      { id: 'c3', author: 'Alex Rivera', init: 'AR', color: 'peach', time: '6h ago', text: 'Paragraph 3 needs the specific citation for the FTC study. Please double-check the figure — I believe it is 2.4 billion not 2.1 billion.', resolved: false }
+      { id: 'c3', author: 'Ayushi Upadhyay', init: 'AU', color: 'peach', time: '6h ago', text: 'Paragraph 3 needs the specific citation for the FTC study. Please double-check the figure — I believe it is 2.4 billion not 2.1 billion.', resolved: false }
     ]
   },
   {
@@ -63,7 +63,7 @@ const DEFAULT_KB = [
 ];
 const DEFAULT_NOTIFS = [
   { id: 'n1', icon: 'ri-checkbox-circle-line', iconBg: 'mint-ll', iconColor: 'mint', title: 'Document approved', body: '"Interview: Mayor Williams on Housing" was approved by the editorial team.', time: '2 hours ago', unread: true },
-  { id: 'n2', icon: 'ri-refresh-line', iconBg: 'blush-ll', iconColor: 'blush', title: 'Revision requested', body: 'Alex requested changes on "Tech Giants\' Capitol Hill Testimony".', time: '5 hours ago', unread: true },
+  { id: 'n2', icon: 'ri-refresh-line', iconBg: 'blush-ll', iconColor: 'blush', title: 'Revision requested', body: 'Ayushi requested changes on "Tech Giants\' Capitol Hill Testimony".', time: '5 hours ago', unread: true },
   { id: 'n3', icon: 'ri-chat-3-line', iconBg: 'lav-ll', iconColor: 'lav', title: 'New comment', body: 'Jordan commented on your cover story draft.', time: 'Yesterday', unread: false },
   { id: 'n4', icon: 'ri-user-add-line', iconBg: 'mint-ll', iconColor: 'mint', title: 'Team member joined', body: 'Casey Morgan accepted your team invitation.', time: '2 days ago', unread: false },
   { id: 'n5', icon: 'ri-send-plane-line', iconBg: 'sky-ll', iconColor: 'sky', title: 'Document submitted', body: 'Sam submitted "Q4 Editorial Report" for review.', time: '3 days ago', unread: false },
@@ -106,8 +106,10 @@ function persist() {
 // ─── BOOT ───
 $(function () {
   applyTheme(STATE.theme, false);
-  STATE.onboarded = true;
-  LS.set('onboarded', true);
+  if (!STATE.onboarded) {
+    window.location.href = 'onboarding.html';
+    return;
+  }
   launchApp();
 
   $(document).on('keydown', function (e) {
@@ -384,7 +386,7 @@ function bindObStep(step) {
       goOb(2); startOtpTimer();
     });
     $('#ob-google,#ob-github').on('click', function () {
-      STATE.obData.name = 'Alex Rivera'; STATE.obData.email = 'alex@thread.app';
+      STATE.obData.name = 'Ayushi Upadhyay'; STATE.obData.email = 'ayushi@citybeat.com';
       goOb(2); startOtpTimer();
     });
     $('#ob-signin').on('click', finishOnboarding);
@@ -1054,7 +1056,7 @@ function bindEditor() {
       </div>`);
   });
   $('#wf-reassign-btn').on('click', () => {
-    const members = ['Alex Rivera', 'Sam Park', 'Jordan Lee', 'Casey Morgan'];
+    const members = ['Ayushi Upadhyay', 'Sam Park', 'Jordan Lee', 'Casey Morgan'];
     openModal(`<button class="modal-close"><i class="ri-close-line"></i></button>
       <div class="modal-title"><i class="ri-user-add-line"></i> Reassign Document</div>
       <div class="form-group"><label class="form-label">Assign to</label>
@@ -1292,7 +1294,7 @@ function renderSettingsBody() {
     <div class="settings-section">
       <div class="settings-section-title"><i class="ri-team-line"></i> Team Members</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-        ${[{ n: 'Alex Rivera', e: 'alex@citybeat.com', r: 'Owner', init: 'AR', i: 0 }, { n: 'Sam Park', e: 'sam@citybeat.com', r: 'Editor', init: 'SP', i: 1 }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', r: 'Writer', init: 'JL', i: 2 }, { n: 'Casey Morgan', e: 'casey@citybeat.com', r: 'Writer', init: 'CM', i: 3 }].map(m => `
+        ${[{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', r: 'Owner', init: 'AU', i: 0 }, { n: 'Sam Park', e: 'sam@citybeat.com', r: 'Editor', init: 'SP', i: 1 }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', r: 'Writer', init: 'JL', i: 2 }, { n: 'Casey Morgan', e: 'casey@citybeat.com', r: 'Writer', init: 'CM', i: 3 }].map(m => `
           <div style="display:flex;align-items:center;gap:10px">
             <div class="av-sm" style="width:32px;height:32px;font-size:12px;background:${AGCS[m.i % AGCS.length]};margin-right:0;flex-shrink:0">${m.init}</div>
             <div style="flex:1"><div style="font-size:13px;font-weight:600">${m.n}</div><div style="font-size:11px;color:var(--text3)">${m.e}</div></div>
@@ -1708,12 +1710,12 @@ function renderAnalyticsView() {
           <div class="analytics-card" style="overflow-y:auto">
             <div class="analytics-card-title"><i class="ri ri-time-line"></i> Team Activity</div>
             <div>
-              ${[
-      { av: 'AR', bg: 0, text: '<strong>Alex</strong> submitted "Local Journalism" for review', time: '2h ago' },
-      { av: 'SP', bg: 1, text: '<strong>Sam</strong> approved "Q4 Editorial Report"', time: '3h ago' },
-      { av: 'JL', bg: 2, text: '<strong>Jordan</strong> posted a comment on "Mayor Williams"', time: '5h ago' },
-      { av: 'CM', bg: 3, text: '<strong>Casey</strong> created "Climate Change: Local Impact"', time: '2d ago' },
-      { av: 'AR', bg: 0, text: '<strong>Alex</strong> invited Casey Morgan to the workspace', time: '3d ago' },
+            ${[
+      { av: 'JL', bg: 2, text: '<strong>Jordan</strong> added 3 comments to "Tech Giants..."', time: '10m ago' },
+      { av: 'AU', bg: 0, text: '<strong>Ayushi</strong> submitted "Local Journalism" for review', time: '2h ago' },
+      { av: 'SP', bg: 1, text: '<strong>Sam</strong> approved "City Council Votes 7-2"', time: '1d ago' },
+      { av: 'CM', bg: 3, text: '<strong>Casey</strong> resolved 4 comments on "Climate Change: Local Impact"', time: '2d ago' },
+      { av: 'AU', bg: 0, text: '<strong>Ayushi</strong> invited Casey Morgan to the workspace', time: '3d ago' },
     ].map(a => `
                 <div class="activity-item">
                   <div class="activity-av" style="background:${AGCS[a.bg % AGCS.length]}">${a.av}</div>
@@ -1806,7 +1808,7 @@ function renderTeamsView() {
     journalism: [
       {
         name: 'Editorial Team', emoji: '📰', color: 'sky', desc: 'Breaking news, investigative reporting',
-        members: [{ n: 'Alex Rivera', e: 'alex@citybeat.com', init: 'AR', role: 'lead' }, { n: 'Sam Park', e: 'sam@citybeat.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', init: 'JL', role: 'reviewer' }, { n: 'Casey Morgan', e: 'casey@citybeat.com', init: 'CM', role: 'writer' }]
+        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@citybeat.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@citybeat.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@citybeat.com', init: 'JL', role: 'reviewer' }, { n: 'Casey Morgan', e: 'casey@citybeat.com', init: 'CM', role: 'writer' }]
       },
       {
         name: 'Publishing Desk', emoji: '🚀', color: 'peach', desc: 'Scheduling and distribution',
@@ -1816,7 +1818,7 @@ function renderTeamsView() {
     legal: [
       {
         name: 'Litigation Team', emoji: '⚖️', color: 'lav', desc: 'Active cases and briefs',
-        members: [{ n: 'Alex Rivera', e: 'alex@firm.com', init: 'AR', role: 'lead' }, { n: 'Sam Park', e: 'sam@firm.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@firm.com', init: 'JL', role: 'reviewer' }]
+        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@firm.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@firm.com', init: 'SP', role: 'editor' }, { n: 'Jordan Lee', e: 'jordan@firm.com', init: 'JL', role: 'reviewer' }]
       },
       {
         name: 'Compliance', emoji: '🛡️', color: 'mint', desc: 'Regulatory and risk management',
@@ -1826,7 +1828,7 @@ function renderTeamsView() {
     writer: [
       {
         name: 'Content Team', emoji: '✍️', color: 'peach', desc: 'Blog, newsletter, and brand writing',
-        members: [{ n: 'Alex Rivera', e: 'alex@studio.com', init: 'AR', role: 'lead' }, { n: 'Sam Park', e: 'sam@studio.com', init: 'SP', role: 'writer' }, { n: 'Jordan Lee', e: 'jordan@studio.com', init: 'JL', role: 'writer' }, { n: 'Casey Morgan', e: 'casey@studio.com', init: 'CM', role: 'reviewer' }]
+        members: [{ n: 'Ayushi Upadhyay', e: 'ayushi@studio.com', init: 'AU', role: 'lead' }, { n: 'Sam Park', e: 'sam@studio.com', init: 'SP', role: 'writer' }, { n: 'Jordan Lee', e: 'jordan@studio.com', init: 'JL', role: 'writer' }, { n: 'Casey Morgan', e: 'casey@studio.com', init: 'CM', role: 'reviewer' }]
       },
     ]
   };
