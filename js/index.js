@@ -9,6 +9,8 @@
     }
     applyTheme(getTheme());
     document.getElementById('themeToggle').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+    document.getElementById('themeToggleMobile').addEventListener('click', () => applyTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+
 
     // ── NAV SCROLL ───────────────────────────────────────────────────
     window.addEventListener('scroll', () => {

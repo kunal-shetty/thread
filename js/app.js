@@ -556,8 +556,18 @@ function renderSidebarDocs() {
 function bindTopbar() {
   $('#logo-home').on('click', () => switchView('dashboard'));
   $('#open-cmd').on('click', openCmd);
-  $('#btn-notif').on('click', function (e) { e.stopPropagation(); $('#profile-dropdown').addClass('hidden'); $('#notif-panel').toggleClass('hidden'); });
-  $('#user-avatar-btn').on('click', function (e) { e.stopPropagation(); $('#notif-panel').addClass('hidden'); renderProfileDropdown(); $('#profile-dropdown').toggleClass('hidden'); });
+  $('#btn-notif').on('click', function (e) { 
+    e.stopPropagation(); 
+    $('#profile-dropdown').addClass('hidden'); 
+    $('#notif-panel').toggleClass('hidden'); 
+    if (!$('#notif-panel').hasClass('hidden')) renderNotifPanel();
+  });
+  $('#user-avatar-btn').on('click', function (e) { 
+    e.stopPropagation(); 
+    $('#notif-panel').addClass('hidden'); 
+    renderProfileDropdown(); 
+    $('#profile-dropdown').toggleClass('hidden'); 
+  });
   $('#btn-fullscreen').on('click', () => {
     document.fullscreenElement ? document.exitFullscreen().catch(() => { })
       : document.documentElement.requestFullscreen().catch(() => { });
@@ -623,6 +633,10 @@ function bindSidebar() {
     STATE.sidebarCollapsed = !STATE.sidebarCollapsed;
     $('#sidebar').toggleClass('collapsed', STATE.sidebarCollapsed);
     persist();
+  });
+  $('#btn-notif').on('click', () => {
+    $('#notif-panel').toggleClass('hidden');
+    if (!$('#notif-panel').hasClass('hidden')) renderNotifPanel();
   });
   $('#workspace-row').on('click', openWorkspaceSwitcher);
   $(document).on('click', '.nav-item[data-view]', function () {

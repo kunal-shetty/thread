@@ -851,7 +851,7 @@ h1.hero-title {
 }
 
 .mode-tab {
-  padding: 10px 26px;
+  padding: 10px 10px;
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
@@ -1505,7 +1505,7 @@ h1.hero-title {
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
-  padding: 0 18px;
+  padding: 18px 18px;
   outline: none;
   transition: all .2s var(--ease)
 }
@@ -1659,6 +1659,10 @@ footer {
   color: var(--text)
 }
 
+.nav-right-mobile {
+    display: none;
+  }
+
 /* ANIMATIONS */
 @keyframes fadeUp {
   from {
@@ -1711,6 +1715,14 @@ footer {
 }
 
 @media(max-width:768px) {
+  .nav-right {
+    display: none;
+  }
+
+  .nav-right-mobile {
+    display: flex;
+  }
+
   .nav-links {
     display: none
   }
